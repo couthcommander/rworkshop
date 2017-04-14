@@ -1,0 +1,1396 @@
+---
+title: "R Workshop"
+author: "Cole Beck"
+references:
+- URL: http://miktex.org/download
+  id: miktex
+  title: 1
+- URL: http://www.tug.org/mactex/morepackages.html
+  id: mactex
+  title: 2
+- URL: http://yihui.name/knitr/
+  id: knitr
+  title: 3
+- URL: http://yihui.name/en/2013/10/markdown-or-latex/
+  id: yihui
+  title: 4
+- URL: https://github.com/yihui/knitr-examples
+  id: knitr-examples
+  title: 5
+- URL: http://yihui.name/knitr/options/#chunk_options
+  id: knitr-chunk
+  title: 6
+- URL: http://biostat.mc.vanderbilt.edu/wiki/pub/Main/RConfiguration/Rprofile
+  id: rprofile
+  title: 7
+- URL: https://github.com/harrelfe/rscripts
+  id: rscripts
+  title: 8
+- URL: http://www.statmethods.net/advgraphs/ggplot2.html
+  id: ggplot
+  title: 9
+output:
+  html_notebook: default
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+---
+
+```{r, echo = FALSE}
+library(knitr)
+opts_chunk$set(comment = NA)
+options(width = 85)
+```
+
+# Installing LaTeX
+
+LaTeX is an open source typesetting system used for document preparation.  It should be installed for R and RStudio to produce PDF reports.  It is a tool for advanced users who wish to compose advanced tables, use cross-referencing, indexing, or have finer control over document layout.  Others may use Markdown as an alternative to produce PDF and HTML reports.
+
+## Windows
+
+Install [MiKTeX][miktex] [-@miktex] - choose Basic MiKTeX Installer
+
+Applications will likely be installed in `C:\Program Files (x86)\MiKTeX 2.9\miktex\bin`.
+
+Use the `mpm` application to install additional LaTeX packages.
+
+## OS X
+
+Install [MacTeX][mactex] [-@mactex] - choose BasicTeX.pkg
+
+Applications will likely be installed in `/usr/texbin`.
+
+Use the `tlmgr` command-line program to install additional LaTeX packages.  As an example, this installs the `framed` style package:
+
+```
+sudo tlmgr install framed
+```
+
+## Linux
+
+Install TeXLive - Ubuntu flavored distributions may use the command-line program `apt-get`:
+
+```
+sudo apt-get install texlive-base texlive-latex-recommended texlive-latex-extra
+```
+
+Applications will likely be installed in `/usr/bin`.
+
+Additional LaTeX packages may require manual installation in `/usr/share/texlive/texmf-dist/tex/latex`.
+
+---
+
+## Test Installation
+
+After LaTeX has been installed, test that `pdflatex` runs from the command line prompt:
+
+```
+pdflatex --version
+```
+
+If this fails to return information about `pdflatex`, check that it is installed in the proper location.  If found the LaTeX application path needs to be added to your environment path, or you may need to log out and back in.
+
+---
+
+# Navigating RStudio
+
+* Creating scripts (R Script, R Markdown, R Sweave)
+* Creating projects
+* Environment
+* Files
+* Plots
+* Packages
+* Help
+
+## Running a R script
+
+When an R script is open, RStudio can run one line at a time, run all highlighted lines, or run the entire script.
+
+A script can also be run in entirety by calling the `source` function, which works with local files as well as URLs.
+
+```{r, eval=FALSE}
+source("https://github.com/harrelfe/rscripts/raw/master/introda.r")
+```
+
+---
+
+# R Packages
+
+Install the packages `Hmisc, rms, knitr, rmarkdown` through RStudio.
+
+Packages contain R code and may often require the installation of other packages.  When I install `Hmisc`, I see that its dependency `acepack` is automatically installed:
+
+```
+Installing package into ‘/home/beckca/R/x86_64-pc-linux-gnu-library/3.1’
+(as ‘lib’ is unspecified)
+also installing the dependency ‘acepack’
+
+trying URL 'http://debian.mc.vanderbilt.edu/R/CRAN/src/contrib/acepack_1.3-3.3.tar.gz'
+Content type 'application/x-gzip' length 33590 bytes (32 Kb)
+opened URL
+==================================================
+downloaded 32 Kb
+
+trying URL 'http://debian.mc.vanderbilt.edu/R/CRAN/src/contrib/Hmisc_3.14-6.tar.gz'
+Content type 'application/x-gzip' length 611348 bytes (597 Kb)
+opened URL
+==================================================
+downloaded 597 Kb
+
+* installing *source* package ‘acepack’ ...
+.
+.
+.
+* DONE (acepack)
+* installing *source* package ‘Hmisc’ ...
+.
+.
+.
+* DONE (Hmisc)
+```
+
+---
+
+## Commands for Package Management
+
+### Install and updating
+
+```{r, eval=FALSE}
+# install several packages
+install.packages(c('Hmisc', 'rms', 'knitr', 'rmarkdown'))
+# update all packages
+update.packages(checkBuilt=TRUE, ask=FALSE)
+```
+
+### Loading
+
+Note that `library` is a bit of misnomer as R uses packages, not libraries.  From a technical standpoint, it's nice to recognize the distinction.  You may see `require` used in its place.  If the package is not installed, `library` will trigger an error while `require` will return FALSE.  Once loaded the functions created in the package are available to your R session.
+
+```{r, eval=FALSE}
+library(Hmisc)
+require(Hmisc)
+```
+
+---
+
+# knitr
+
+[knitr][knitr] [-@knitr] was designed as a replacement for Sweave - it is used for dynamic report generation.  It combines the content of your document with the R code that produces results.  Blocks of code are called chunks.
+
+By default RStudio uses Sweave, but this can be changed to knitr in the options.
+
+`Tools -> Global Options, Sweave panel, "Weave Rnw files using..." `
+
+Here's an example of using the `knitr` package to strip out all of this file's R chunks and store them in an R script.
+
+```{r, eval=FALSE}
+library(knitr)
+# may need path to file
+purl('intro.Rmd')
+```
+
+## Rnw/LaTeX/PDF or Rmd/markdown/HTML+
+
+Reports can be generated by two methods, Rnw (noweb) files or Rmd (markdown) files.  Syntax-wise there are two major differences:
+
+1. Declaration of code chunks
+1. Content is formatted with LaTeX (Rnw) or Markdown (Rmd)
+
+LaTeX is much more difficult to learn but it offers superior control over document layout and formatting.  Markdown offers more flexibility in the type of output, such as PDF, HTML and Word.  How do you choose which to use?  A good rule of thumb is to ask yourself "must I print the results nicely on paper?".  If yes, Rnw ([Yihui Xie][yihui] [-@yihui]).
+
+Some R objects are easily converted into LaTeX (see `Hmisc::latex`).  If you are using any LaTeX functions, you should also choose Rnw files.
+
+You can see good examples of both methods [here][knitr-examples] [-@knitr-examples].
+
+Output is created by clicking the `Compile PDF` or `Knit HTML` button.
+
+---
+
+### Code Chunks
+
+An Rnw chunk looks like this:
+
+```
+<<name, chunk-options>>=
+# lines of R code
+@
+```
+
+Here's an R chunk in Rmd:
+
+    ```{r, chunk-options}`r ''`
+    # lines of R code
+    ```
+
+There are many chunk options, see the [online documentation][knitr-chunk] [-@knitr-chunk].
+
+### Nice Defaults with knitrSet
+
+Dr. Harrell has predefined several options and functions that are useful when creating Rnw files.  Load the `Hmisc` package to make the `knitrSet` function available for use.  In the past this function could be included by adding it to your `.Rprofile` file [(example Rprofile)][rprofile] [-@rprofile].  If `knitrSet` is included in your `Rprofile`, it should be removed.
+
+The following chunk will load `Hmisc` and run this function.
+
+```
+<<echo=FALSE>>=
+require(Hmisc)
+knitrSet()
+@
+```
+
+### Rmarkdown Template
+
+Any of the Rmd files found [here][rscripts] [-@rscripts] would make a good template for a reproducible report.  There are two chunks you should consider including in any report.  As previously mentioned `knitrSet` should be added to the beginning of the report.  The computing environment should be added to the end.
+
+It should look similar to this.
+
+    ```{r setup,echo=FALSE}`r ''`
+    require(Hmisc)
+    knitrSet(lang='markdown')
+    ```
+
+```
+# Analysis Start
+# content
+# Analysis End
+
+# Computing Environment
+```
+
+    ```{r rsession,echo=FALSE}`r ''`
+    si <- sessionInfo(); si$loadedOnly <- NULL
+    print(si, locale=FALSE)
+    ```
+    ```{r cite,results='asis',echo=FALSE}`r ''`
+    print(citation(), style='text')
+    ```
+
+The `Hmisc::getRs` function can be used to open one of the sample rscripts within RStudio.
+
+---
+
+# Importing Data Sets
+
+In R, a data set is called a `data.frame`.  Consisting of rows and columns of data, they are the fundamental data structure in R.
+
+R reads in delimited files, such as comma-separated or tab-delimited, as data frames.  Typically this is done with one of the following functions.
+
+* read.table - work with data in table format
+* read.csv - CSV files
+* read.delim - tab-delimited files
+* scan - more general function for reading in data
+
+Several options are useful:
+
+* header - indicator if first line contains column headers
+* sep - field separator
+* quote - quote character
+* na.strings - strings to convert to NA value
+* nrows - number of rows to read
+* skip - number of rows to skip at start of file
+* stringsAsFactors - read strings as character or factor values
+
+A data set may also be imported by clicking the `Import Dataset` button in the Environment pane in RStudio.
+
+The base package `datasets` includes several data sets.  In this example we'll use one to create a file that can be read in as a CSV.
+
+```{r}
+head(state.x77)
+write.csv(state.x77, file='state.csv')
+state <- read.csv('state.csv', stringsAsFactors=FALSE)
+```
+
+---
+
+## Importing from Other Applications
+
+Other methods are available to read in data sets created outside of R.
+
+For example, `Hmisc` includes the functions `sas.get` and `sasxport.get` to work with SAS data sets.
+
+Stat/Transfer is a good option but is not free nor open source.
+
+See the `foreign` package for other options.
+
+## getHdata
+
+The `Hmisc::getHdata` function downloads ready-to-use data sets from the web site for `Hmisc` and `rms`.
+
+```{r}
+require(Hmisc, warn.conflicts=FALSE, quietly=TRUE)
+# list available data sets
+getHdata()
+# download and load data set
+getHdata(counties)
+head(counties)
+# view data dictionary for file - opens in web browser
+getHdata(counties, what="contents")
+contents(counties)
+```
+
+---
+
+## Structure of a data.frame
+
+A `data.frame` consists of observations (rows) of variables (columns).  Examine the `hospital` data set.
+
+```{r}
+getHdata(hospital)
+contents(hospital)
+hospital
+```
+
+Once loaded, note that it is displayed in RStudio's `Environment` pane.  It gives information about the `data.frame`.  This can also be shown through the following functions.
+
+```{r}
+str(hospital)
+names(hospital)
+rownames(hospital)
+dim(hospital)
+```
+
+The `str` function returns the structure of an R object.  In this case the hospital data set is made up of columns of different types: integer, character, factor, numeric.  The `Hmisc::describe` function is especially helpful when taking a first look at a data set.
+
+```{r}
+describe(hospital)
+```
+
+---
+
+# Saving and Loading R Binary Objects
+
+Saving data sets as text files (like CSV) is not always a good idea.  It is more efficient (time and space) to work with R binary objects.  The `save` function will store R objects (including the global environment).  Save a single data set with the `.rda` extension, and save a collection of objects with the `.RData` extension.  These objects can be restored with the `load` function.  By default these files are saved with compression.
+
+```{r}
+# save single data set
+save(hospital, file='hosp.rda', compress=TRUE)
+# save everything
+save.image(file='myintro.RData')
+```
+
+Restart R and the following will restore the `hospital` data set.
+
+```{r}
+load('hosp.rda')
+```
+
+`Hmisc::Save` and `Hmisc::Load` may also be used on single objects - the file will keep the name of the object unless otherwise provided.  Compression is also enabled.
+
+```{r}
+Save(hospital)
+Load(hospital)
+```
+
+---
+
+# R Basics
+
+## Assignment
+
+```{r}
+x <- "my string"
+y = 5
+```
+
+## Printing
+
+```{r}
+print(x)
+cat(x, "\n")
+x
+sum(y)
+(x <- 1)
+```
+
+---
+
+## Vectors
+
+Container of one type.  Elements are indexed from 1 to n, and can be accessed by this index (more on this later).
+
+```{r}
+z <- c(1,-5,20)
+(z <- c(10, z, 36))
+z[2]
+```
+
+---
+
+## Numeric
+
+### Basic arithmetic
+
+```{r}
+z + 1
+z - 2
+z * 3
+z / 4
+z ^ 5
+# mod, the remainder
+z %% 6
+# integer division
+z %/% 6
+# recreate z
+(z %/% 6) * 6 + z %% 6
+sqrt(z)
+```
+
+### Numeric Functions
+
+Many other functions work with numeric values, see ?S3groupGeneric
+
+```{r}
+abs(z)
+sign(z)
+round(z / 7, 2)
+floor(z / 7)
+ceiling(z / 7)
+# exponential function
+exp(z)
+# natural logarithms
+log(z)
+# trig functions
+sin(z)
+```
+
+### Descriptive Statistics
+
+```{r}
+sum(z)/length(z)
+mean(z)
+median(z)
+sd(z)
+min(z)
+max(z)
+range(z)
+quantile(z)
+quantile(z, probs=c(0.1, 0.5, 0.9))
+```
+
+---
+
+### Generating Sequences and Random Data
+
+See ?seq and ?Distributions
+
+```{r}
+numeric(5)
+seq(1, 10)
+seq(10)
+1:10
+seq(1, 10, by=2)
+rep(1, 5)
+rep(1:3, each=3)
+rep(1:3, times=3)
+rep(1:3, times=1:3)
+rnorm(5, mean=0, sd=1)
+rbinom(5, size=1, prob=0.5)
+rpois(5, lambda=3)
+runif(5, min=0, max=10)
+```
+
+Recreate random data with seeds - values are reproducible across computers
+
+```{r}
+# the seed can be any integer value
+set.seed(1)
+rnorm(5)
+set.seed(1)
+rnorm(5)
+```
+
+### Floating-point precision
+
+Beware precision errors with numeric values.
+
+```{r}
+seq(10)/10 == seq(0.1, 1, by=0.1)
+abs(seq(10)/10 - seq(0.1, 1, by=0.1)) < 10^-7
+```
+
+---
+
+## Integer
+
+Mostly unnecessary, useful to represent data exactly or to pass to C or Fortran code
+
+```{r}
+as.integer(1)
+class(1L)
+class(c(1L, 1))
+```
+
+## Logical
+
+```{r}
+logical(5)
+rep(TRUE, 5)
+as.logical(c(-1,0,1))
+1+1 == 2
+3 < 2
+# logical negation
+!FALSE
+x <- seq(10)
+# logical or
+x %% 2 == 0 | x %% 3 == 0
+# logical and
+x %% 2 == 0 & x %% 3 == 0
+(x <- rnorm(5) > 0)
+# return index for true elements
+which(x)
+any(x)
+all(x)
+```
+
+## Character
+
+```{r}
+character(5)
+LETTERS[seq(5)]
+letters[seq(5)]
+x <- "My string"
+toupper(x)
+tolower(x)
+nchar(x)
+substr(x, 4, 6)
+# [set of values]
+grep("[aeiou]", letters)
+grepl("[aeiou]", letters)
+gsub("[a-m]", "_", x)
+(y <- paste(x, "is", x))
+paste(y, "!", sep='')
+# this might not do what you think
+paste(letters[seq(10)], sep='')
+paste(letters[seq(10)], collapse='')
+# strsplit turns vector into list
+strsplit(c("1;2","3;4","5:6"), split=";")
+# use unlist if only one string
+unlist(strsplit(y, split=" "))
+```
+
+---
+
+## Factor
+
+Factor variables are categorical variables; they may appear as character strings, but they are stored as numerics.  They may be important to models or plotting functions.
+
+```{r}
+set.seed(5)
+race <- sample(c('white','black','other'), size=10, replace=TRUE, prob=c(0.5,0.3,0.2))
+# factor values are created in alphabetical order
+(r2 <- factor(race))
+r2 <- factor(race, levels=c('white','black','asian','other'))
+levels(r2)
+nlevels(r2)
+levels(r2) <- list(white='white', black='black', other=c('other', 'asian'))
+# this fails
+c(r2, "hispanic")
+# coerce to character string first
+factor(c(as.character(r2), "hispanic"))
+```
+
+---
+
+## Date
+
+Internally, dates are stored as days from 01/01/1970 (this is day 0).  Format options can be checked from the ?strptime help file.
+
+```{r}
+Sys.Date()
+# need consistent format
+as.Date(c("05-03-01", "11-11-25"), format="%y-%m-%d")
+# accepts numeric data, if origin is specified
+# Excel typically uses an origin of "1900-01-01"
+(x <- as.Date(seq(0, by=365, length.out=3), origin="2000-01-01"))
+as.numeric(x)
+format(x, format="%m/%d/%Y")
+# seq.Date(x[1], x[2], by=14)
+seq(x[1], x[2], by=14)
+diff(x)
+as.numeric(diff(x), units='weeks')
+```
+
+---
+
+## Date-time
+
+Date-time variables can be stored in two ways.  POSIXct variables are stored as seconds from 01/01/1970.  POSIXlt variables have each date/time component saved in a list container.  Typically, you should use POSIXct.
+
+Careful consideration of the timezone should be used when working with date-time variables.  By default R will take the timezone from the operating system.  It can be helpful to explicitly select your time zone, and additionally using `UTC` whenever possible.
+
+```{r}
+Sys.time()
+Sys.timezone()
+x <- as.POSIXct("2014-10-10 10:20")
+# see ?strptime for format options
+y <- as.POSIXlt("10/17/2014 20:10", tz="UTC", format="%m/%d/%Y %H:%M")
+unclass(x)
+unclass(y)
+difftime(Sys.time(), x, units="days")
+base::round.POSIXt(x, units="hours")
+```
+
+---
+
+## Special Types
+
+* Undefined - `NULL`
+* Missing - `NA`
+* Infinite - `Inf` and `-Inf`
+* Not a Number - `NaN`
+
+```{r}
+x <- c(1,4,NA,0)
+is.na(x)
+# note calculations with NA result in NA
+is.infinite(x / 0)
+is.nan(x / 0)
+```
+
+---
+
+## Mixing Types
+
+Mixing types together in a vector will coerce all variables to be of the same, least flexible, type.
+
+```{r}
+# str shows the structure of an R object, similar to Environment pane
+str(c("a", 1))
+str(c(5L, 1))
+str(c(TRUE, 0))
+str(c(FALSE, "false"))
+str(c(100, Sys.Date()))
+str(c('today', Sys.time()))
+str(c(factor(c("apple", "orange")), "banana"))
+```
+
+---
+
+## Containers
+
+* vector - supports one type, with one dimension
+* matrix - supports one type, with two dimensions
+* array - supports one type, with many dimensions
+* data.frame - supports one type per column, but may vary by column
+* list - supports many types
+
+Each have two important attributes, dimension length and dimension names.
+
+```{r}
+x <- c(1, 10, 100)
+length(x)
+names(x) <- c("ones", "tens", "hundreds")
+# assign names during vector creation
+(x <- c(ones=1, tens=10, hundreds=100))
+names(x)
+# print vector without names
+unname(x)
+# remove names
+names(x) <- NULL
+mx <- matrix(1:6, nrow=2)
+# number of rows
+nrow(mx)
+# number of columns
+ncol(mx)
+# display number of rows and columns
+dim(mx)
+rownames(mx) <- c('odd', 'even')
+colnames(mx) <- c('a', 'b', 'c')
+# assign names during matrix creation
+(mx <- matrix(1:6, nrow=2, dimnames=list(c('odd', 'even'), c('a','b','c'))))
+str(mx)
+```
+
+---
+
+## Vectors
+
+### Accessing Elements
+
+Indexing is vital concept.  It allows access to specific parts of a container, for extraction or replacement.  There are four main ways to use indexing.
+
+* index by element number
+* index by negation
+* index by element name
+* index on truth of logical comparison
+
+Note that in R, the first element is indexed at 1.  Many programming languages start at 0 instead.
+
+```{r}
+x <- c(royals=4, angels=0, tigers=1, orioles=7)
+# index by number, returned in order specified
+x[c(4,3)]
+# index by negation
+x[-c(1,2)]
+# index by name
+x[c("orioles", "angels")]
+# index by truth
+x[x > 3]
+x[x > 3 & x < 7]
+# index replacement
+x[c("royals","orioles")] <- c(7,4)
+# create new element
+x["as"] <- 0
+# non-existent elements are NA
+x[6]
+```
+
+### Functions for Vectors
+
+* head, tail
+* rev
+* match, `%in%`
+* summary
+* sort, order
+* table - contingency table
+* unique
+* duplicated
+* union, intersect, setdiff
+* split, unsplit
+
+```{r}
+# these examples use state data sets, see ?state
+head(state.region)
+tail(state.region, n=10)
+state.region %in% c("West", "South", "Central")
+c("West", "South", "Central") %in% state.region
+match(state.region, c("West", "South", "Central"))
+summary(state.area)
+sort(state.area)
+# display order by element index
+order(state.area)
+table(state.region)
+table(state.division, state.region)
+unique(state.region)
+duplicated(state.region)
+set.seed(2)
+x <- sample(20, 10)
+y <- sample(20, 10)
+union(x, y)
+# union takes two arguments, unique takes one (a vector)
+all(union(x, y) == unique(c(x, y)))
+intersect(x, y)
+# elements in x, not in y
+setdiff(x, y)
+# elements in y, not in x
+setdiff(y, x)
+# create list of state names by region
+split(state.name, state.region)
+```
+
+---
+
+### Recycling
+
+Some vector operations require vectors of equal length.  If the vectors are of unequal length, elements in the shorter vector may be recycled.
+
+```{r}
+# c(10,1) becomes c(10,1,10,1,10)
+c(1,10,100,1000,10000) / c(10,1)
+# letters[1:2] becomes letters[c(1,2,1,2)]
+paste(letters[1:2], letters[23:26])
+```
+
+---
+
+## Matrices
+
+Two dimensional vector.  Values are stored by column by default.
+
+Useful functions:
+
+* `%*%` - matrix multiplication
+* rowSums, colSums
+* t - transpose
+* cbind - add column
+* rbind - add row
+* solve
+* upper.tri, lower.tri
+* diag - access diagonal, or create identity matrix
+* det - calculate the determinant
+
+```{r}
+matrix(1:5)
+matrix(seq(8), nrow=4, ncol=2)
+(x <- matrix(seq(8), nrow=4, ncol=2, byrow=TRUE))
+rowSums(x)
+colSums(x)
+y <- matrix(c(1,1,0,0), nrow=2)
+x %*% y
+x - y[rep(1,4),]
+# add a column, note the use of recycling
+cbind(x, 3)
+rbind(x, c(9, 10))
+x <- matrix(c(4,12,-5,-10), nrow=2)
+all.equal(x %*% solve(x), diag(2))
+solve(x, c(10, 40))
+x <- matrix(seq(25), nrow=5)
+t(x)
+upper.tri(x)
+```
+
+### Indexing
+
+* by row(s)
+* by column(s)
+* by comparison
+
+Remember that the row and column index could be either the row/column number or the row/column name.
+
+```{r}
+x[3,]
+x[,3]
+x[3,3]
+x[c(1,5),]
+x[3,c(3,4)]
+x[x %% 3 == 0] <- 0
+x
+x[lower.tri(x)] <- 0
+x
+```
+
+## Arrays
+
+Arrays are similar to matrices, however they support one, two or more dimensions.
+
+Index by `array[d1ix, d2ix, d3ix, ..., dnix]`
+
+```{r}
+# this creates 4 2x3 matrices
+x <- array(1:24, dim=c(2,3,4))
+x[2,3,4]
+x[,,4]
+```
+
+---
+
+## Data Frames
+
+Data.frames are the fundamental data structures in R.  They have rows and columns like matrices, however different columns may contain different variable types.
+
+Remember that matrices use `rownames` and `colnames` to access row/column names.  Data frames use `row.names` and `names` instead.
+
+When creating a data.frame with a column of character values, make sure to decide if the values should be converted to factor variables.  This can be set with the `stringsAsFactors` argument.
+
+```{r}
+x <- data.frame(id=1:3, animal=c('cat','dog','rabbit'), 
+                speed=c('faster','fast','fastest'))
+y <- data.frame(id=1:3, animal=c('cat','dog','rabbit'), 
+                speed=c('faster','fast','fastest'), stringsAsFactors=FALSE)
+y[3,]
+y[,c(2,3)]
+y[,'speed']
+y[y[,'speed'] == 'fastest',]
+y[y[,'speed'] == 'fastest', 'animal']
+y[,'speed.factor'] <- factor(y[,'speed'])
+```
+
+There are other methods to select or create data.frame columns:
+
+```{r}
+y[,3]
+y[,'speed']
+y$speed
+y[['speed']]
+y[,'speed', drop=FALSE]
+y['speed']
+y[,'new'] <- NA
+y <- cbind(y, newer=0)
+y
+```
+
+It is good to write code that is consistent and easy to understand.  For this reason I recommend using the `df[,colname]` syntax.
+
+There are also a couple of ways to remove columns:
+
+```{r}
+y[,'new'] <- NULL
+y <- y[,-1]
+y <- y[,-match('newer', names(y))]
+y
+```
+
+Useful functions:
+
+* merge - join data frames by common columns
+* with, within - simplify expressions using column names
+
+```{r}
+x <- data.frame(id=seq(4,24,4), gender=rbinom(6, 1, 0.5))
+y <- data.frame(id=seq(6,24,6), smoker=rbinom(4, 1, 0.25))
+merge(x, y)
+merge(x, y, by=0)
+merge(x, y, by.x='id', by.y='id', all.x=TRUE, all.y=FALSE)
+merge(x, y, all=TRUE)
+# modify data frame, and reference columns without repeating data frame name
+x <- within(x, {
+  weight <- round(rnorm(nrow(x), 120+gender*60, 10))
+  age <- sample(15:25, nrow(x), replace=TRUE)
+})
+# shorter than x[order(x[,'gender'], x[,'age']),]
+x[with(x, order(gender, age)),]
+```
+
+---
+
+## Lists
+
+Lists are generic containers.  Think of them as a vector where each element can by anything you want, including more lists.
+
+```{r}
+emptylist <- vector('list', 10)
+x <- list(abb=state.abb, area=state.area, region=state.region, animals=y, other=5)
+```
+
+### Indexing
+
+Extracting with a single bracket returns a list.  Extracting with two brackets returns the contents at the given index.
+
+```{r}
+x[1]
+x[1:2]
+x[[1]]
+x[["area"]]
+# while not recommended, $ provides short-cut
+x$area
+x[4:5] <- NULL
+```
+
+A list can be flattened to produce a vector with `unlist`.
+
+```{r}
+# notice that all values become character strings, because the first element
+# contained character values (the least flexible variable type)
+unlist(x)
+```
+
+---
+
+## Control Structure
+
+Control structures are used to change if and when lines of code in a program are run.  The control comes from conditions being true or false.
+
+### Branching
+
+`if` statements execute a block of code once or not at all.  Multiple conditions can be tested so that only the block under the first condition evaluated as true will be executed.  A default block of code can be evaluated if none of the conditions pass.
+
+Several lines of code can be combined in a block by surrounding them with braces `{...}`.  It is good practice to use braces, though they are not required for a single statement.
+
+```{r}
+x <- 5
+if(x >=0) {
+  print(sqrt(x))
+}
+x <- -4
+if(x >=0) {
+  print(sqrt(x))
+} else if(x < 0) {
+  print(sqrt(x*-1))
+}
+x <- 0
+if(x > 0) {
+  print(sqrt(x))
+} else if(x < 0) {
+  print(sqrt(x*-1))
+} else {
+  print(0)
+}
+```
+
+The `ifelse` function can be used to test a vector of values.
+
+```{r}
+set.seed(3)
+ifelse(rnorm(10) > 0, 1, 0)
+```
+
+### Iteration
+
+Three mechanisms can be used to run blocks of code multiple times.
+
+* for - repeat over sequence
+* while - repeat while condition passes
+* repeat - repeat until forced break
+
+```{r}
+set.seed(5)
+nc <- 5
+x <- sample(nc, 100, replace=TRUE)
+cnt <- numeric(nc)
+for(i in seq(nc)) {
+  cnt[i] <- sum(x == i)
+}
+cnt
+
+i <- 3
+while(i <= 100) {
+  isprime <- all(i %% seq(2, sqrt(i)) != 0)
+  if(isprime) cat(i, "")
+  i <- i + 1
+}
+
+a <- 1
+b <- 2
+repeat {
+  tmp <- a
+  a <- b
+  b <- a + tmp
+  if(b > 100) break
+  print(b)
+}
+```
+
+## Functions
+
+Functions allow blocks of code to be run repeatedly.  Variables are passed into functions as arguments.  When the function completes, it may also return a variable (including a list, which may hold several elements).
+
+Don't access variables from within a function that were created outside of the function (unless they are passed into the function as arguments).
+
+### Return Values
+
+```{r}
+prQ <- function(x) {
+  qs <- quantile(x, probs=c(0.5, 0.25, 0.75))
+  return(sprintf("%s (%s, %s)", qs[1], qs[2], qs[3]))
+}
+prQ(1:9)
+
+# return doesn't have to be explicitly called
+factors <- function(x) {
+  Filter(function(i) x %% i == 0, seq(1, floor(x/2)))
+}
+factors(64)
+
+# NULL can be returned as well
+doNothing <- function(x) NULL
+```
+
+### Arguments
+
+A function can have many arguments.  A generic argument `...` can be used to specify any number of additional arguments.  Arguments can be given a default value.
+
+```{r}
+powerAdd <- function(p1=1, p2=1, p3=1) {
+  p1 + p2^2 + p3^3
+}
+powerAdd()
+powerAdd(3,2,1)
+powerAdd(5, p3=3)
+powerAdd(p2=16)
+
+# take any number of arguments
+morePowerAdd <- function(p1=1, ...) {
+  extra <- unlist(list(...))
+  sum(p1, extra^(1+seq_along(extra)))
+}
+morePowerAdd()
+morePowerAdd(5, 4, 3, 2, 1)
+
+# use extra arguments for another function
+callPlot <- function(msg, ...) {
+  print(sprintf("calling plot: %s", msg))
+  plot(...)
+  NULL
+}
+callPlot("log", 1:10, log(1:10))
+```
+
+## Putting It Together
+
+This creates a sample data set with multiple visits for each patient:
+
+```{r}
+size <- 1000
+set.seed(475)
+x <- data.frame(id=sample(100, size, replace=TRUE),
+                visitdate=sample(365*2, size, replace=TRUE)
+                )
+male <- sample(c(0,1,NA), 100, replace=TRUE, prob=c(45, 45, 10))
+age <- round(runif(100, 40, 80))
+x <- merge(x, cbind(male, id=seq(100)))
+x <- merge(x, cbind(age, id=seq(100)))
+x[,'visitdate'] <- as.Date(x[,'visitdate'], origin='2010-01-01')
+x <- x[with(x, order(id, visitdate)),]
+row.names(x) <- NULL
+```
+
+It's common to operate on a `data.frame` by breaking it into small subsets.  Calculate visit number and days since first visit:
+
+```{r}
+uids <- unique(x[,'id'])
+for(i in seq_along(uids)) {
+  # note x is already ordered by visitdate
+  id.x <- which(x[,'id'] == uids[i])
+  x[id.x, 'visitno'] <- seq_along(id.x)
+  x[id.x, 'daysOn'] <- x[id.x, 'visitdate'] - x[id.x[1], 'visitdate']
+}
+```
+
+This method may work great, unless rows are added or removed.  What if we wanted to add a last visit that's three years after the first visit?
+
+First consider a function that is given a subset.
+
+```{r}
+# x should only have one unique ID value, and be ordered by visitdate
+addLastVisit <- function(x) {
+  last <- x[1,]
+  last[,'visitdate'] <- last[,'visitdate'] + 365*3
+  last[,'visitno'] <- nrow(x) + 1
+  last[,'daysOn'] <- 365*3
+  rbind(x, last)
+}
+# quick example
+addLastVisit(x[x[,'id'] == 100,])
+```
+
+Because our new `data.frame` may have a unknown size, we can store the intermediate subsets in a list.  `lapply` is a convenient function to use for this.
+
+```{r}
+# now x is saved as 100 element list
+x.list <- lapply(unique(x[,'id']), FUN=function(i) addLastVisit(x[x[,'id'] == i,]))
+```
+
+The finals steps are to convert the list back to a `data.frame`, and, if we care, update row names.  `do.call` is powerful, but can be difficult to learn.  The first argument is a function.  The second argument should be a list, whose elements are the arguments to the referenced function.  In this case, the 100 elements of `x.list` are the arguments to the `rbind` function, which should make sense as we are row-binding these data frames together.
+
+```{r}
+x.df <- do.call(rbind, x.list)
+row.names(x.df) <- NULL
+```
+
+The R package `plyr` was written to handle similar tasks.
+
+---
+
+# Transforming Variables
+
+Variables can be transformed by applying functions or arithmetic.
+
+```{r}
+getHdata(diabetes)
+contents(diabetes)
+# create BMI
+diabetes[,'bmi'] <- 703*diabetes[,'weight']/diabetes[,'height']^2
+# scale cholesterol to [0,1]
+diabetes[,'chol.scaled'] <- (diabetes[,'chol']-min(diabetes[,'chol'], na.rm=TRUE))/
+  (max(diabetes[,'chol'], na.rm=TRUE)-min(diabetes[,'chol'], na.rm=TRUE))
+head(diabetes)
+getHdata(olympics.1996)
+contents(olympics.1996)
+# take log of population
+olympics.1996[,'log.pop'] <- log(olympics.1996[,'population'])
+# create factor variable using cut points
+olympics.1996[,'medals.factor'] <- cut(olympics.1996[,'medals'], 
+                                       c(0,10,20,50,100,Inf), right=FALSE)
+head(olympics.1996)
+```
+
+---
+
+# Subsetting data frames
+
+Several examples of subsetting or indexing the `hospital` data set are below.  Also shown is the `subset` function, a convenience function for accomplishing this task.
+
+```{r}
+# select rows by index
+hospital[1:3,]
+# select rows by name
+hospital[c("5","10","15","20"),]
+# select columns by index, and first 10 rows
+hospital[seq(10),c(1,5)]
+# select columns by name, and 5 random rows
+hospital[sample(nrow(hospital), 5), c('age','sex')]
+# be careful when selecting a single column
+# no longer data.frame, but vector
+hospital[seq(5),'service']
+# maintain data.frame structure
+hospital[seq(5),'service', drop=FALSE]
+# select rows that satisfy condition
+# every 5th row
+hospital[seq(nrow(hospital))%%5 == 0,]
+# men
+hospital[hospital[,'sex'] == 'male',]
+subset(hospital, sex == 'male')
+# 30-40 year olds, but only first 5
+hospital[hospital[,'age'] %in% 30:49, c('id','age')][1:5,]
+subset(hospital, age %in% 30:49, select=c(id, age))[1:5,]
+# temp greater than 99
+hospital[hospital[,'temp'] > 99, c('id','temp')]
+subset(hospital, temp > 99, c(id, temp))
+# combining conditions with AND
+# women with duration over 10
+hospital[hospital[,'sex'] == 'female' & hospital[,'duration'] > 10,]
+# `with` saves some typing
+hospital[with(hospital, sex == 'female' & duration > 10),]
+# `subset` saves even more
+subset(hospital, sex == 'female' & duration > 10)
+# combining conditions with OR
+# antibiotic or bculture
+hospital[hospital[,'antibiotic'] == 'yes' | hospital[,'bculture'] == 'yes',]
+# combining conditions with complicated combinations
+# men younger than 30 or women older than 60
+hospital[with(hospital, (sex == 'male' & age < 30) | (sex == 'female' & age > 60)),]
+# select columns that match pattern
+hospital[seq(10), grep("^s", names(hospital))]
+# select empty data.frame
+hospital[FALSE,]
+```
+
+---
+
+# Data Aggregation
+
+Summary statistics can be computed with `tapply`, `aggregate`, and `Hmisc::summarize`.
+
+```{r}
+getHdata(DominicanHTN)
+contents(DominicanHTN)
+# calculate mean age by village
+with(DominicanHTN, tapply(age, village, mean))
+# calculate mean sbp by gender
+aggregate(sbp ~ gender, data=DominicanHTN, FUN=mean)
+# calculate median age by village and gender
+aggregate(age ~ village + gender, DominicanHTN, median)
+# calculate quantile of sbp by village and gender
+with(DominicanHTN, summarize(sbp, llist(village, gender), quantile))
+```
+
+---
+
+# Formulas
+
+The previous `aggregate` example introduced the `~` operator.  The tilde is used to create a model formula, which consists of a left-hand side and right-hand side.  Many R functions utilize formulas, such as plotting functions and model-fitting functions.  The left-hand side consists of the response variable, while the right-hand side may contain several terms.  You may see the following operators within a formula.
+
+* y ~ a + b, `+` indicates to include both a and b as terms
+* y ~ a:b, `:` indicates the interaction of a and b
+* y ~ a*b, equivalent to y ~ a+b+a:b
+* y ~ (a+b)^2, equivalent to y ~ (a+b)*(a+b)
+* y ~ a + I(b+c), `I` indicates to use `+` in the arithmetic sense
+
+See ?formula for more examples.
+
+---
+
+# Models
+
+The most simple model-fitting function is `lm`, which is used to fit linear models.  It's primary argument is a formula.  Using the DominicanHTN data set, we can fit sbp by age.
+
+```{r}
+(m <- lm(sbp ~ age, data=DominicanHTN))
+```
+
+This creates an `lm` object, and several functions can be used on model objects.  The internal structure of a model object is a list - its elements may be accessed just like a list.
+
+* coef
+* fitted
+* predict
+* residuals
+* vcov
+* summary
+* anova
+
+```{r}
+names(m)
+m$coefficients
+coef(m)
+head(fitted(m))
+predict(m, data.frame(age=c(40, 60)))
+head(residuals(m))
+vcov(m)
+summary(m)
+coef(summary(m))
+anova(m)
+```
+
+---
+
+# R Graphics with ggplot2
+
+The examples [here][ggplot] [-@ggplot] say it best.
+
+```{r}
+library(ggplot2)
+# create factors, categorical variables
+m2 <- within(mtcars, {
+    gear.factor <- factor(gear, levels=c(3,4,5), labels=c("3gears","4gears","5gears"))
+    am.factor <- factor(am, levels=c(0,1), labels=c("Automatic","Manual"))
+    cyl.factor <- factor(cyl, levels=c(4,6,8), labels=c("4cyl","6cyl","8cyl"))
+})
+
+# kernel density
+qplot(mpg, data=m2, geom="density", fill=gear.factor, alpha=I(.5), 
+      main="Distribution of Gas Mileage", xlab="Miles Per Gallon", ylab="Density"
+)
+```
+
+```{r, fig.width=5.5, fig.height=3.7}
+# scatterplot
+qplot(hp, mpg, data=m2, shape=am.factor, color=am.factor, 
+      facets=gear.factor~cyl.factor, size=I(3), xlab="Horsepower", 
+      ylab="Miles per Gallon"
+)
+
+# boxplot
+qplot(gear, mpg, data=m2, geom=c("boxplot", "jitter"), fill=gear.factor, 
+      main="Mileage by Gear Number", xlab="", ylab="Miles per Gallon"
+)
+```
+
+Example with regression:
+
+```{r, fig.width=5.5, fig.height=3.6}
+# scatterplot
+p <- qplot(wt, mpg, data=m2, color=cyl.factor, 
+      main="Regression of MPG on Weight", xlab="Weight", ylab="Miles per Gallon"
+)
+# add regression line
+p + geom_smooth(method="lm")
+p + geom_smooth(method="loess")
+```
+
+## Graphics Devices
+
+Plots created with `ggplot2` can be saved to a file with the `ggsave` function.  The file format is determined by the file name.  Some are vector file formats (pdf, svg), while others (bmp, jpeg, png) are raster formats.  Vector files can be scaled without pixelation.
+
+Create 6"x6" png at 300 dpi, useful for print publications:
+
+```{r, fig.show='hide'}
+qplot(hp, mpg, data=m2, shape=am.factor, color=am.factor, 
+      facets=gear.factor~cyl.factor, size=I(3), xlab="Horsepower", 
+      ylab="Miles per Gallon"
+)
+ggsave("mileageByHorses.png", width=6, height=6, dpi=300)
+```
+
+Plot to PDF:
+
+```{r, fig.show='hide'}
+qplot(gear, mpg, data=m2, geom=c("boxplot", "jitter"), fill=gear.factor, 
+            main="Mileage by Gear Number", xlab="", ylab="Miles per Gallon")
+ggsave("mileageByGear.pdf")
+```
+
+---
+
+# Links
+
+[miktex]: http://miktex.org/download "MiKTeX"
+
+[mactex]: http://www.tug.org/mactex/morepackages.html "MacTeX"
+
+[knitr]: http://yihui.name/knitr/ "knitr"
+
+[yihui]: http://yihui.name/en/2013/10/markdown-or-latex/ "markdown or latex"
+
+[knitr-examples]: https://github.com/yihui/knitr-examples "examples"
+
+[knitr-chunk]: http://yihui.name/knitr/options/#chunk_options "chunk options"
+
+[rprofile]: http://biostat.mc.vanderbilt.edu/wiki/pub/Main/RConfiguration/Rprofile "~/.Rprofile"
+
+[rscripts]: https://github.com/harrelfe/rscripts "R script examples"
+
+[ggplot]: http://www.statmethods.net/advgraphs/ggplot2.html "ggplot2 examples"

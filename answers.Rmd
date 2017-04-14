@@ -1,0 +1,24 @@
+---
+title: "R Notebook"
+output:
+  html_notebook:
+    code_folding: "hide"
+---
+
+# Solutions
+
+## R Package Challenge
+
+The first time you install a package within a new R session, you must select the CRAN mirror.  Usually the best choice is the repository that is geographically closest to you.  Once selected subsequent package installations will use this same server.
+
+What command allows you to select a new CRAN mirror?
+
+```{r, eval=FALSE}
+chooseCRANmirror()
+```
+
+How do you manually specify the default repository?
+
+```{r, eval=FALSE}
+options(repos = "http://debian.mc.vanderbilt.edu/R/CRAN/")
+```
