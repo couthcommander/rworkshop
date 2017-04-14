@@ -1,10 +1,11 @@
 # rworkshop
 
 ```r
-suppressMessages(require(Hmisc, quietly = TRUE, warn.conflicts = FALSE))
-# open this file
+# install Hmisc
+install.packages("Hmisc")
+# open exercises
 Hmisc::getRs("exercises.Rmd", "couthcommander", "rworkshop")
-# open the solutions
+# open solutions
 Hmisc::getRs("answers.Rmd", "couthcommander", "rworkshop")
 ```
 
