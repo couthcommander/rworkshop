@@ -1,0 +1,653 @@
+---
+title: "R workshop"
+author: "Cole Beck"
+output: html_notebook
+---
+
+# Setup
+```{r setup,results='hide'}
+require(Hmisc)
+knitrSet(lang='markdown', h=4.5)
+options(grType='plotly')
+mu <- markupSpecs$html
+```
+
+# Fetching Data, Modifying Variables, and Printing Data Dictionary
+
+The `getHdata` function is used to fetch a dataset from the Vanderbilt [DataSets][datasets] web site.  `upData` is used to
+
+- create a new variable from an old one
+- add labels to 2 variables
+- add units to the new variable
+- remove the old variable
+- automatically move units of measurements from parenthetical expressions in labels to separate `units` attributed used by `Hmisc` and `rms` functions for table making and graphics
+
+`contents` is used to print a data dictionary, run through an `html` method for nicer output.
+
+```{r metadata,results='asis'}
+getHdata(pbc)
+pbc <- upData(pbc,
+              fu.yrs = fu.days / 365.25,
+              labels = c(fu.yrs = 'Follow-up Time',
+                         status = 'Death or Liver Transplantation'),
+              units = c(fu.yrs = 'year'),
+              drop  = 'fu.days',
+              moveUnits=TRUE, html=TRUE)
+html(contents(pbc), maxlevels=10, levelType='table')
+```
+
+# Descriptive Statistics Without Stratification
+
+```{r describe,results='asis'}
+# did have results='asis' above
+d <- describe(pbc)
+html(d, size=80, scroll=TRUE)
+plot(d)
+```
+
+# Stratified Descriptive Statistics
+
+Produce stratified quantiles, means/SD, and proportions by treatment group.  Plot the results before rendering as an advanced html table:
+
+- categorical variables: a single dot chart
+- continuous variables: a series of extended box plots
+
+```{r summaryM,results='asis'}
+s <- summaryM(bili + albumin + stage + protime + sex + age + spiders +
+              alk.phos + sgot + chol ~ drug, data=pbc,
+							overall=FALSE, test=TRUE)
+plot(s, which='categorical')
+plot(s, which='continuous', vars=1:4)
+plot(s, which='continuous', vars=5:7)
+```
+
+```{r summaryM4}
+html(s, caption='Baseline characteristics by randomized treatment',
+     exclude1=TRUE, npct='both', digits=3,
+     prmsd=TRUE, brmsd=TRUE, msdsize=mu$smaller2)
+```
+
+# Spike Histogram
+
+```{r histbox,results='asis'}
+p <- with(pbc, histboxp(x=sgot, group=drug, sd=TRUE))
+p
+```
+# Cardiovascular risk factor data
+
+```{r}
+getHdata(diabetes)
+html(contents(diabetes), levelType='table')
+```
+
+# Formulas
+
+The tilde is used to create a model formula, which consists of a left-hand side and right-hand side.  Many R functions utilize formulas, such as plotting functions and model-fitting functions.  The left-hand side consists of the response variable, while the right-hand side may contain several terms.  You may see the following operators within a formula.
+
+* y ~ a + b, `+` indicates to include both a and b as terms
+* y ~ a:b, `:` indicates the interaction of a and b
+* y ~ a*b, equivalent to y ~ a+b+a:b
+* y ~ (a+b)^2, equivalent to y ~ (a+b)*(a+b)
+* y ~ a + I(b+c), `I` indicates to use `+` in the arithmetic sense
+
+See ?formula for more examples.
+
+# Models
+
+The most simple model-fitting function is `lm`, which is used to fit linear models.  It's primary argument is a formula.  Using the diabetes data set, we can fit waist size by weight.
+
+```{r}
+(m <- lm(waist ~ weight, data=diabetes))
+```
+
+This creates an `lm` object, and several functions can be used on model objects.  The internal structure of a model object is a list - its elements may be accessed just like a list.
+
+* coef
+* fitted
+* predict
+* residuals
+* vcov
+* summary
+* anova
+
+```{r}
+names(m)
+m$coefficients
+coef(m)
+head(fitted(m))
+predict(m, data.frame(weight=c(150, 200, 250)))
+head(residuals(m))
+vcov(m)
+summary(m)
+coef(summary(m))
+anova(m)
+```
+
+## Visualization
+
+Create a scatterplot of weight and waist size.
+
+```{r}
+p <- qplot(weight, waist, data=diabetes)
+p + geom_smooth(method="lm")
+```
+
+Remove missing values and fit with LOESS curve.
+
+```{r}
+diab <- diabetes[complete.cases(diabetes[,c('waist','weight')]),]
+p <- qplot(weight, waist, data=diab)
+p + geom_smooth(method="loess")
+```
+
+# Data Manipulation
+
+The Dominican Republic Hypertension dataset contains data on gender, age, and systolic and diastolic blood pressure from several villages in the DR.
+
+```{r}
+getHdata(DominicanHTN)
+html(describe(DominicanHTN))
+```
+
+## Adding variables or transformations
+
+```{r}
+DominicanHTN[,'map'] <- (DominicanHTN[,'sbp'] + DominicanHTN[,'dbp'] * 2) / 3
+DominicanHTN[,'male'] <- as.numeric(DominicanHTN[,'gender'] == 'Male')
+DominicanHTN[1:5,]
+```
+
+```{r}
+qage <- quantile(DominicanHTN[,'age'])
+qage[1] <- qage[1]-1
+DominicanHTN[,'ageGrp'] <- cut(DominicanHTN[,'age'], breaks=qage)
+```
+
+## Filter
+
+```{r}
+nrow(DominicanHTN)
+nrow(DominicanHTN[DominicanHTN[,'gender'] == "Male",])
+which(DominicanHTN[,'village'] %in% c('Carmona','San Antonio'))
+cojMen <- DominicanHTN[DominicanHTN[,'village'] == 'Cojobal' & DominicanHTN[,'gender'] == "Male",]
+cojMen
+```
+
+## Sort
+
+```{r}
+cojMen[order(cojMen[,'age'], decreasing=TRUE),]
+```
+
+## Aggregate and counts
+
+```{r}
+table(DominicanHTN[,'gender'])
+```
+
+```{r}
+addmargins(with(DominicanHTN, table(village, gender)))
+```
+
+```{r}
+with(DominicanHTN, tapply(age, village, mean))
+```
+
+```{r}
+aggregate(sbp ~ gender, data=DominicanHTN, FUN=mean)
+```
+
+```{r}
+aggregate(age ~ village + gender, DominicanHTN, median)
+```
+
+# Rosner's lead data
+
+The `lead` exposure dataset was collected to study the well-being of childen who lived near a lead smelting plant.  The following analysis considers the lead exposure levels in 1972 and 1973, as well as age and the finger-wrist tapping score `maxfwt`.
+
+```{r contents,results='asis'}
+getHdata(lead)
+lead <- upData(lead,
+       keep = c('ld72','ld73','age','maxfwt'),
+       labels = c(age = 'Age'),
+       units = c(age='years', ld72='mg/100*ml', ld73='mg/100*ml'))
+html(contents(lead), maxlevels=10, levelType='table')
+```
+
+```{r}
+html(describe(lead))
+```
+
+# Ordinary least squares regression
+
+The `rms` package includes the `ols` fitting function.  Use `datadist` to compute summaries of the distributional charateristics of the predictors - or simply give it an entire data frame.  `datadist` must be re-run if you add a new predictor or recode an old one.
+
+```{r}
+require(rms)
+dd <- datadist(lead)
+options(datadist='dd')
+f <- ols(maxfwt ~ age + ld72 + ld73, data=lead)
+f
+```
+
+`rms` provides many methods to work with the `ols` fit object.
+
+* coef
+* fitted
+* predict
+* resid
+* anova
+* summary
+* Predict
+* ggplot
+* Function
+* nomogram
+
+## Coefficient Estimates
+
+```{r}
+coef(f)
+```
+
+## Define R function representing fitted model
+
+The default values for function arguments are medians.
+
+```{r}
+g <- Function(f)
+g
+g(age=10, ld72=21, ld73=c(21, 47))
+```
+
+## Predicted values with standard errors
+
+```{r}
+predict(f, data.frame(age=10, ld72=21, ld73=c(21, 47)), se.fit=TRUE)
+```
+
+## Residuals
+
+```{r}
+r <- resid(f)
+par(mfrow=c(2,2))
+plot(fitted(f), r); abline(h=0)
+with(lead, plot(age, r)); abline(h=0)
+with(lead, plot(ld73, r)); abline(h=0)
+# q-q plot to check normality
+qqnorm(r)
+```
+
+## Plotting partial effects
+
+`Predict` and `ggplot` makes one plot for each predictor.  Predictors not shown in plot are set to constants (continuous:median, categorical:mode).  0.95 pointwise confidence limits for $\hat{E}(y|x)$ are shown; use `conf.int=FALSE` to suppress CLs.
+
+```{r}
+ggplot(Predict(f))
+```
+
+Specify which predictors are plotted.
+
+```{r}
+ggplot(Predict(f, age))
+```
+
+```{r}
+ggplot(Predict(f, age=3:15))
+```
+
+```{r}
+ggplot(Predict(f, age=seq(3,16,length=150)))
+```
+
+Obtain confidence limits for $\hat{y}$.
+
+```{r}
+ggplot(Predict(f, age, conf.type='individual'))
+```
+
+Combine plots.
+
+```{r}
+p1 <- Predict(f, age, conf.int=0.99, conf.type='individual')
+p2 <- Predict(f, age, conf.int=0.99, conf.type='mean')
+p <- rbind(Individual=p1, Mean=p2)
+ggplot(p)
+```
+
+```{r}
+ggplot(Predict(f, ld73, age=3))
+```
+
+```{r}
+ggplot(Predict(f, ld73, age=c(3,9)))
+```
+
+3-d surface for two continuous predictors against $\hat{y}$.
+
+```{r, fig.width=6}
+bplot(Predict(f, ld72, ld73))
+```
+
+## Nomograms
+
+```{r, fig.height=6, fig.width=6}
+plot(nomogram(f))
+```
+
+## Point Estimates for Partial Effects
+
+```{r}
+summary(f)
+```
+
+Adjust `age` to 5, which has no effect as the model does not include any interactions.
+
+```{r}
+summary(f, age=5)
+```
+
+Effect of changing `ld73` from 20 to 40.
+
+```{r}
+summary(f, ld73=c(20,40))
+```
+
+If a predictor has a linear effect, a one-unit change can be used to get the confidence interval of its slope.
+
+```{r}
+summary(f, age=5:6)
+```
+
+There is also a `plot` method for `summary` results.
+
+```{r}
+plot(summary(f))
+```
+
+## Getting Predicted Values
+
+Give `predict` a fit object and `data.frame`.
+
+```{r}
+predict(f, data.frame(age=3, ld72=21, ld73=21))
+```
+
+```{r}
+predict(f, data.frame(age=c(3,10), ld72=21, ld73=c(21,47)))
+```
+
+```{r}
+newdat <- expand.grid(age=c(4,8), ld72=c(21, 47), ld73=c(21, 47))
+newdat
+```
+
+```{r}
+predict(f, newdat)
+```
+
+Include confidence levels.
+
+```{r}
+predict(f, newdat, conf.int=0.95)
+predict(f, newdat, conf.int=0.95, conf.type='individual')
+```
+
+Brute-force predicted values.
+
+```{r}
+b <- coef(f)
+b[1] + b[2]*3 + b[3]*21 + b[4]*21
+```
+
+Predicted values with `Function`.
+
+```{r}
+# g <- Function(f)
+g(age = c(3,8), ld72 = 21, ld73 = 21)
+g(age = 3)
+```
+
+## ANOVA
+
+Use `anova` to get all total effects and individual partial effects.
+
+```{r}
+an <- anova(f)
+an
+```
+
+Include corresponding variable names.
+
+```{r}
+print(an, 'names')
+print(an, 'subscripts')
+print(an, 'dots')
+```
+
+Combined partial effects.
+
+```{r}
+anova(f, ld72, ld73)
+```
+
+# Importing Data
+
+## Text files
+
+* read.table - work with data in table format
+* read.csv - CSV files
+* read.delim - tab-delimited files
+* scan - more general function for reading in data
+
+## Binary representation of R objects
+
+Compressed data and loads faster.
+
+* RData
+* `feather` package
+
+## Database connections
+
+Allows data queries.
+
+* `RODBC` package
+* `RSQLite` package
+
+## Other statistical packages
+
+* `Hmisc` package: `sas.get`, `sasxport.get`
+* `haven` package: `read_sas`, `read_sav`, `read_dta`
+* `foreign` package
+* Stat/Transfer - not free nor open source
+
+# Data Cleaning
+
+An R `data.frame` consists of a collection of values.  In a well-structured data set, each value is associated with a variable (column) and observation (row).  Data sets often need to be manipulated to become well-structured.
+
+Hadley Wickham's [Tidy Data][tidy] provides an excellent overview on how to clean messy data sets.
+
+## Column header contains values
+
+```{r}
+# politics and religion
+senateReligion <- data.frame(religion=c('Protestant','Catholic','Jewish','Mormon','Buddhist',"Don't Know/Refused"),
+                          Democrats=c(20,15,8,1,1,3),
+                          Republicans=c(38,9,0,5,0,0))
+```
+
+```{r}
+senRel <- cbind(senateReligion[,'religion'], stack(senateReligion[,c('Democrats','Republicans')]))
+names(senRel) <- c('religion','count','party')
+senRel
+```
+
+## Multiple variables in a column
+
+```{r}
+pets <- data.frame(county=c('Davidson','Rutherford','Cannon'),
+                   male.dog=c(50,150,70), female.dog=c(60,150,70),
+                   male.cat=c(30,100,50), female.cat=c(30,70,40),
+                   male.horse=c(6,30,20), female.horse=c(6,28,19))
+```
+
+```{r}
+pets2 <- cbind(pets[,'county'], stack(pets[,-1]))
+names(pets2) <- c('county','count','ind')
+```
+
+Watch out for factor variables.
+
+```{r}
+tryCatch(strsplit(pets2[,'ind'], '\\.'), error=function(e){ e })
+```
+
+```{r}
+genderAnimal <- strsplit(as.character(pets2[,'ind']), '\\.')
+pets2[,c('gender','animal')] <- NA
+for(i in seq(nrow(pets2))) {
+  pets2[i, c('gender','animal')] <- genderAnimal[[i]]
+}
+pets2[,'ind'] <- NULL
+pets2
+```
+
+## Variables in a row
+
+```{r}
+set.seed(1000)
+d1 <- rnorm(1000, 5, 2)
+d2 <- runif(1000, 0, 10)
+d3 <- rpois(1000, 5)
+d4 <- rbinom(1000, 10, 0.5)
+x <- data.frame(distribution=c(rep('normal',2),rep('uniform',2),rep('poisson',2),rep('binomial',2)),
+           stat=rep(c('mean','sd'),4),
+           value=c(mean(d1), sd(d1), mean(d2), sd(d2), mean(d3), sd(d3), mean(d4), sd(d4)))
+```
+
+```{r}
+cbind(distribution=x[c(1,3,5,7),'distribution'], unstack(x, form=value~stat))
+```
+
+## Normalization and merging
+
+```{r}
+employees <- data.frame(id=1:4, Name=c('Eddie','Andrea','Steve','Theresa'),
+                        job=c('engineer','accountant','statistician','technician'))
+set.seed(10)
+hours <- data.frame(id=sample(4, 10, replace=TRUE),
+                    week=1:10, hours=sample(30:60, 10, replace=TRUE))
+merge(employees, hours)
+# merge(employees, hours, by.x='id', by.y='id')
+```
+
+```{r}
+empHours <- merge(employees, hours, all.x=TRUE)
+empHours
+```
+
+```{r}
+unique(empHours[,c('id','Name','job')])
+empHours[,c('id','week','hours')]
+```
+
+Exclude rows with missing data.
+
+```{r}
+empHours[!is.na(empHours[,'week']), c('id','week','hours')]
+```
+
+## Combining data
+
+```{r}
+rbind(genderAnimal[[1]], genderAnimal[[2]], genderAnimal[[3]])
+```
+
+```{r}
+do.call(rbind, genderAnimal)
+```
+
+# Simulation
+
+Plot mean while sampling from normal distribution
+
+```{r}
+n <- 100
+imean <- numeric(n)
+smean <- numeric(n)
+for(i in seq(n)) {
+  imean[i] <- mean(rnorm(10))
+  smean[i] <- mean(imean[seq(i)])
+}
+plot(imean, ylab='Sample Mean')
+abline(h=0, lty=3)
+lines(smean)
+```
+
+```{r}
+n <- 1000
+sig <- numeric(n)
+for(i in seq(n)) {
+  grp1 <- rnorm(15, 60, 5)
+  grp2 <- rnorm(15, 65, 5)
+  sig[i] <- t.test(grp1, grp2, var.equal = TRUE)$p.value < 0.05
+}
+mean(sig)
+```
+
+Add some flexibility to our simulation by creating a function.
+
+```{r}
+tTestPower <- function(n=15, mu1=60, mu2=65, sd=5, nsim=1000) {
+  sig <- numeric(nsim)
+  for(i in seq(nsim)) {
+    grp1 <- rnorm(n, mu1, sd)
+    grp2 <- rnorm(n, mu2, sd)
+    sig[i] <- t.test(grp1, grp2, var.equal = TRUE)$p.value < 0.05
+  }
+  mean(sig)
+}
+tTestPower()
+tTestPower(25, nsim=10000)
+```
+
+There's already a function to compute the power of a two-sample t test.
+
+```{r}
+power.t.test(n=25, delta=5, sd=5)$power
+```
+
+## Bootstrap sample
+
+```{r}
+true_mu <- 0
+x <- rnorm(100, true_mu)
+R <- 999
+res <- matrix(nrow=R, ncol=6)
+colnames(res) <- c('mu','se','lb','ub','coverage','bias')
+for(i in seq(R)) {
+  r <- sample(x, replace=TRUE)
+  res[i,'mu'] <- mean(r)
+  res[i,'se'] <- sd(r) / sqrt(length(r))
+}
+res[,'lb'] <- res[,'mu'] + qnorm(0.025) * res[,'se']
+res[,'ub'] <- res[,'mu'] + qnorm(0.975) * res[,'se']
+res[,'coverage'] <- res[,'lb'] < true_mu & res[,'ub'] > true_mu
+res[,'bias'] <- res[,'mu'] - true_mu
+```
+
+```{r}
+res[1:5,]
+vals <- colMeans(res)
+out <- sprintf("empirical SE: %.3f
+MSE: %.3f
+basic bootstrap confidence interval: (%.3f, %.3f)
+coverage probability: %.3f
+mean bias: %.3f
+sample mean: %.3f
+", sd(res[,'mu']), vals['se'], vals['lb'], vals['ub'], vals['coverage'], vals['bias'], mean(x))
+cat(out)
+```
+
+[datasets]: http://biostat.mc.vanderbilt.edu/wiki/Main/DataSets "DataSets"
+
+[tidy]: http://vita.had.co.nz/papers/tidy-data.pdf "Tidy Data"
