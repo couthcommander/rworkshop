@@ -12,6 +12,69 @@ options(grType='plotly')
 mu <- markupSpecs$html
 ```
 
+# R Packages
+
+Install the packages `Hmisc, rms, knitr, rmarkdown` through RStudio.
+
+Packages contain R code and may often require the installation of other packages.  When I install `Hmisc`, I see that its dependency `acepack` is automatically installed:
+
+```
+Installing package into ‘/home/beckca/R/x86_64-pc-linux-gnu-library/3.1’
+(as ‘lib’ is unspecified)
+also installing the dependency ‘acepack’
+
+trying URL 'http://debian.mc.vanderbilt.edu/R/CRAN/src/contrib/acepack_1.3-3.3.tar.gz'
+Content type 'application/x-gzip' length 33590 bytes (32 Kb)
+opened URL
+==================================================
+downloaded 32 Kb
+
+trying URL 'http://debian.mc.vanderbilt.edu/R/CRAN/src/contrib/Hmisc_3.14-6.tar.gz'
+Content type 'application/x-gzip' length 611348 bytes (597 Kb)
+opened URL
+==================================================
+downloaded 597 Kb
+
+* installing *source* package ‘acepack’ ...
+.
+.
+.
+* DONE (acepack)
+* installing *source* package ‘Hmisc’ ...
+.
+.
+.
+* DONE (Hmisc)
+```
+
+## Install and updating
+
+Install through CRAN repositories
+
+```{r, eval=FALSE}
+# install several packages
+install.packages(c('Hmisc', 'rms', 'knitr', 'rmarkdown'))
+# update all packages
+update.packages(checkBuilt=TRUE, ask=FALSE)
+```
+
+Install through Github repositories
+
+```{r, eval=FALSE}
+install.packages('devtools')
+require(devtools)
+install_github('harrelfe/rms')
+```
+
+## Loading
+
+Note that `library` is a bit of misnomer as R uses packages, not libraries.  From a technical standpoint, it's nice to recognize the distinction.  You may see `require` used in its place.  If the package is not installed, `library` will trigger an error while `require` will return FALSE.  Once loaded the functions created in the package are available to your R session.
+
+```{r, eval=FALSE}
+library(Hmisc)
+require(Hmisc)
+```
+
 # Fetching Data, Modifying Variables, and Printing Data Dictionary
 
 The `getHdata` function is used to fetch a dataset from the Vanderbilt [DataSets][datasets] web site.  `upData` is used to
@@ -73,6 +136,64 @@ html(s, caption='Baseline characteristics by randomized treatment',
 p <- with(pbc, histboxp(x=sgot, group=drug, sd=TRUE))
 p
 ```
+# Data Visualization
+
+The very low birthweight data set contains data on 671 infants born with a birth weight of under 1600 grams.  We'll plot gestational age by birthweight using three graphics systems: base graphics, ggplot, and plotly.
+
+```{r}
+getHdata(vlbw)
+# remove missing values
+vlbw <- vlbw[complete.cases(vlbw[,c('sex','dead','gest','bwt')]),]
+```
+
+## Base
+
+Build each element into your plot.
+
+```{r, fig.width = 6}
+grps <- split(vlbw[,c('gest','bwt')], vlbw[,c('sex','dead')])
+plot(c(22,40), c(400,1600), type='n', xlab='Gestational Age', ylab='Birth Weight (grams)', axes=FALSE)
+axis(1, at=c(22,28,34,40), labels=c(22,28,34,40))
+axis(2, at=seq(400,1600,by=400), labels=seq(400,1600,by=400))
+points(grps[['female.0']], col='black', pch=1)
+points(grps[['female.1']][,'gest'], grps[['female.1']][,'bwt'], col='black', pch=0)
+points(jitter(grps[['male.0']][,'gest'], 2), grps[['male.0']][,'bwt'], col='gray', pch=4)
+points(grps[['male.0']][,'bwt'] ~ jitter(grps[['male.0']][,'gest'], 2), col='gray', pch=3)
+legend(x=38, y=1000, legend=c('F:0','F:1','M:0','M:1'), col=c('black','black','gray','gray'), pch=c(1,0,4,3))
+```
+
+
+## ggplot2
+
+Given a data set, choose the aesthetic mapping and geometry layer.
+
+```{r}
+p <- ggplot(data=vlbw) + aes(x=gest, y=bwt, color=sex, shape=as.factor(dead)) + geom_point()
+p
+```
+
+```{r}
+p <- p + geom_jitter() + scale_x_continuous() + scale_y_continuous()
+p
+```
+
+## Plotly
+
+Add interactive graphics, which is trivial when also using `ggplot`.
+
+```{r}
+require(plotly)
+ggplotly(p)
+```
+
+```{r}
+plot_ly(type="box") %>%
+  add_boxplot(y = grps[['female.0']][,'bwt'], name='F:0') %>%
+  add_boxplot(y = grps[['female.1']][,'bwt'], name='F:1') %>%
+  add_boxplot(y = grps[['male.0']][,'bwt'], name='M:0') %>%
+  add_boxplot(y = grps[['male.1']][,'bwt'], name='M:1')
+```
+
 # Cardiovascular risk factor data
 
 ```{r}
@@ -279,30 +400,30 @@ qqnorm(r)
 
 ## Plotting partial effects
 
-`Predict` and `ggplot` makes one plot for each predictor.  Predictors not shown in plot are set to constants (continuous:median, categorical:mode).  0.95 pointwise confidence limits for $\hat{E}(y|x)$ are shown; use `conf.int=FALSE` to suppress CLs.
+`Predict` and `pplot` make one plot for each predictor.  Predictors not shown in plot are set to constants (continuous:median, categorical:mode).  0.95 pointwise confidence limits for $\hat{E}(y|x)$ are shown; use `conf.int=FALSE` to suppress CLs.
 
 ```{r}
-ggplot(Predict(f))
+plotp(Predict(f))
 ```
 
 Specify which predictors are plotted.
 
 ```{r}
-ggplot(Predict(f, age))
+plotp(Predict(f, age))
 ```
 
 ```{r}
-ggplot(Predict(f, age=3:15))
+plotp(Predict(f, age=3:15))
 ```
 
 ```{r}
-ggplot(Predict(f, age=seq(3,16,length=150)))
+plotp(Predict(f, age=seq(3,16,length=150)))
 ```
 
 Obtain confidence limits for $\hat{y}$.
 
 ```{r}
-ggplot(Predict(f, age, conf.type='individual'))
+plotp(Predict(f, age, conf.type='individual'))
 ```
 
 Combine plots.
@@ -315,7 +436,7 @@ ggplot(p)
 ```
 
 ```{r}
-ggplot(Predict(f, ld73, age=3))
+plotp(Predict(f, ld73, age=3))
 ```
 
 ```{r}
@@ -647,6 +768,16 @@ sample mean: %.3f
 ", sd(res[,'mu']), vals['se'], vals['lb'], vals['ub'], vals['coverage'], vals['bias'], mean(x))
 cat(out)
 ```
+
+# Worth Mentioning
+
+## tidyverse
+
+Wickham's "Tidy Data" philosophy was concurrent with the development of a suite of R packages useful for data management.  This includes `ggplot2` and `haven` as well as many others such as `dplyr`, `stringr`, and `tidyr`.
+
+## data.table
+
+`data.table` is another beneficial package for data manipulation.  It provides similar functionality to the `data.frame`, but works well with large data sets.
 
 [datasets]: http://biostat.mc.vanderbilt.edu/wiki/Main/DataSets "DataSets"
 
