@@ -2,12 +2,18 @@
 title: "R Notebook"
 output:
   html_notebook:
-    code_folding: "hide"
+    code_folding: hide
 ---
 
 # Solutions
 
-## R Package Challenge
+```{r setup}
+suppressMessages(require(rms, quietly = TRUE, warn.conflicts = FALSE))
+require(splines, quietly = TRUE)
+require(plotly, quietly = TRUE, warn.conflicts = FALSE)
+```
+
+## Challenge 1
 
 The first time you install a package within a new R session, you must select the CRAN mirror.  Usually the best choice is the repository that is geographically closest to you.  Once selected subsequent package installations will use this same server.
 
@@ -21,4 +27,276 @@ How do you manually specify the default repository?
 
 ```{r, eval=FALSE}
 options(repos = "http://debian.mc.vanderbilt.edu/R/CRAN/")
+```
+
+## Challenge 2
+
+```{r}
+gender <- c('M','M','F','M','F','F','M','F','M')
+age <- c(34, 64, 38, 63, 40, 73, 27, 51, 47)
+smoker <- c('no','yes','no','no','yes','no','no','no','yes')
+exercise <- factor(c('moderate','frequent','some','some','moderate','none',
+                     'none','moderate','moderate'),
+                    levels=c('none','some','moderate','frequent'), ordered=TRUE
+)
+los <- c(4,8,1,10,6,3,9,4,8)
+x <- data.frame(gender, age, smoker, exercise, los)
+```
+
+1. Create a linear model using `x`, estimating the association between `los` and all remaining variables
+
+```{r}
+lm(los ~ gender + age + smoker + exercise, data=x)
+```
+
+2. Create a new model, this time predicting `los` by `gender`; show the model summary
+
+```{r}
+f <- lm(los ~ gender)
+summary(f)
+```
+
+3. What is the estimate for the intercept?  What is the estimate for gender?
+
+```{r}
+coef(f)
+```
+
+4. Re-calculate the standard errors, by taking the square root of the diagonal of the variance-covariance matrix of the summary of the linear model
+
+```{r}
+sqrt(diag(vcov(summary(f))))
+```
+
+5. Predict `los` with the following new data set
+
+```{r}
+newdat <- data.frame(gender=c('F','M','F'))
+predict(f, newdat)
+```
+
+6. Sum the square of the residuals of the model.  Compare this to passing the model to the `deviance` function.
+
+```{r}
+sum(resid(f)^2)
+deviance(f)
+```
+
+7. Create a subset of `x` by taking all records where `gender` is 'M' and assigning it to the variable `men`. Do the same for the variable `women`.
+
+```{r}
+men <- x[x[,'gender'] == 'M',]
+women <- x[x[,'gender'] == 'F',]
+```
+
+8. Call the `t.test` function, where the first argument is los for women and the second argument is los for men.  Add the argument var.equal and set it to TRUE.  Does this match the p-value computed in the model summary?
+
+```{r}
+t.test(women[,'los'], men[,'los'], var.equal=TRUE)
+```
+
+## Challenge 3
+
+```{r}
+x <- seq(0, 3.5*pi, length=50)
+dat <- data.frame(x = x, y = 4 * sin(x) + rnorm(length(x)))
+```
+
+1. Create a scatterplot of `dat`.
+
+```{r}
+plot(dat)
+```
+
+2. `f <- lm(y ~ ns(x,1), data = dat)` will create a linear model where `y` is predicted with a natural cubic spline of `x`; in this case it uses a spline with one degree of freedom.  Create five models, increasing the degrees of freedom from 1 to 5.
+
+```{r}
+f1 <- lm(y ~ ns(x,1), data = dat)
+f2 <- lm(y ~ ns(x,2), data = dat)
+f3 <- lm(y ~ ns(x,3), data = dat)
+f4 <- lm(y ~ ns(x,4), data = dat)
+f5 <- lm(y ~ ns(x,5), data = dat)
+```
+
+3. Generate predicted values for the five models with the given data set.
+
+```{r}
+newdat <- data.frame(x=seq(x[1]*0.9, x[50]*1.1, length=50))
+```
+
+```{r}
+p1 <- predict(f1, newdat)
+p2 <- predict(f2, newdat)
+p3 <- predict(f3, newdat)
+p4 <- predict(f4, newdat)
+p5 <- predict(f5, newdat)
+```
+
+4. Recreate the scatterplot of `dat`, but add lines for the predicted values (try it with base, ggplot, and plotly).
+
+```{r}
+plot(dat, xlim=range(newdat[,'x']))
+lines(newdat[,'x'], p1, col=1)
+lines(newdat[,'x'], p2, col=2)
+lines(newdat[,'x'], p3, col=3)
+lines(newdat[,'x'], p4, col=4)
+lines(newdat[,'x'], p5, col=5)
+```
+
+```{r}
+predat <- data.frame(x=newdat[,'x'], y=c(p1, p2, p3, p4, p5), model=factor(rep(1:5, each=50)))
+p <- ggplot(predat) + aes(x = x, y = y, color = model) + geom_line() + geom_point(data = dat, color='black')
+p
+```
+
+```{r}
+ggplotly(p)
+```
+
+## Challenge 4
+
+1. Retrieve the `titanic3` data set.
+
+```{r}
+getHdata(titanic3)
+```
+
+2. Describe the data.
+
+```{r}
+html(describe(titanic3))
+```
+
+3. `naclus` can be used to examine missing data.  Use it on the dataset and plot the results.
+
+```{r}
+plot(naclus(titanic3))
+```
+
+4. Describe `age`, `sex`, `pclass`, and `embarked` with the `summaryM` function while stratifying on `survived`.  Show the output as a table and plot.
+
+```{r}
+s <- summaryM(age + sex + pclass + embarked ~ survived, data=titanic3)
+plot(s)
+html(s)
+```
+
+5. Use a logistic regression model (`lrm`) with the formula `survived ~ rcs(age,5)*sex+pclass`.  `rcs(age,5)` indicates that age will be represented by a restricted cubic spline with five knots.  Save the fit object as `f` and print it.
+
+```{r}
+dd <- datadist(titanic3)
+options(datadist = "dd")
+f <- lrm(survived ~ rcs(age,5)*sex+pclass, data=titanic3)
+f
+```
+
+6. Obtain predictions for a data.frame that contains variables for `age`, `sex`, and `pclass`.  Provide your own values for three or four observations.  Pass the predicted values to `plogis` to perform a logistic transformation.
+
+```{r}
+dat <- expand.grid(age=30, sex=c('female','male'), pclass=c('1st','2nd'))
+plogis(predict(f, dat))
+```
+
+7. Plot the `nomogram` of the fit object.  Add `fun=plogis` as an argument to `nomogram`.
+
+```{r}
+plot(nomogram(f, fun=plogis))
+```
+
+8. Use `ggplot` and `Predict` to plot the predictors `age`, `sex`, and `pclass`.  Include `fun=plogis` as an argument to `Predict`.
+
+```{r}
+ggplot(Predict(f, age, sex, pclass, fun=plogis))
+```
+
+## Challenge 5
+
+The CDC has many available data sets.  Take a look at the demographics data file for the [NHANES National Youth Fitness Survey](https://wwwn.cdc.gov/nchs/nhanes/search/nnyfsdata.aspx?Component=Demographics).  This is an XPT file, or SAS export file.  The code book can be viewed [here](https://wwwn.cdc.gov/Nchs/Nnyfs/Y_DEMO.htm).
+
+1. Download, then import this dataset.
+
+```{r}
+dat <- foreign::read.xport("~/Downloads/Y_DEMO.XPT")
+```
+
+2. Keep only the following variables: `RIAGENDR, RIDAGEYR, INDHHIND2, DMDHHSIZ`.  Describe the data.
+
+```{r}
+dat <- dat[,c('RIAGENDR','RIDAGEYR','INDHHIN2','DMDHHSIZ')]
+html(describe(dat))
+```
+
+3. Turn `RIAGENDR` into a factor variable with the proper value labels.
+
+```{r}
+dat[,'RIAGENDR'] <- factor(dat[,'RIAGENDR'], labels=c('Male','Female'))
+```
+
+4. Modify `INDHHIN2` by collapsing:
+
+* 1,2,3,4,13 into 1
+* 5,6,7,8 into 2
+* 9,10,14 into 3
+* 15 into 4
+* 12,77,99 into NA
+
+Then turn it into an ordered factor variable with the labels `$0-$19999, $20000-$54999, $55000-$99999, $100000+`.
+
+```{r}
+tmpinc <- dat[,'INDHHIN2']
+tmpinc[tmpinc %in% c(1,2,3,4,13)] <- 1
+tmpinc[tmpinc %in% c(5,6,7,8)] <- 2
+tmpinc[tmpinc %in% c(9,10,14)] <- 3
+tmpinc[tmpinc == 15] <- 4
+tmpinc[!(tmpinc %in% c(1,2,3,4))] <- NA
+dat[,'INDHHIN2'] <- factor(tmpinc,
+                           labels=c('$0-$19999', '$20000-$54999', '$55000-$99999', '$100000+'),
+                           ordered=TRUE)
+```
+
+5. Show the `table` of gender against age, and household income against size.
+
+```{r}
+with(dat, table(RIAGENDR, RIDAGEYR))
+with(dat, table(INDHHIN2, DMDHHSIZ))
+```
+
+## Challenge 6
+
+Calculate a bootstrapped, 95% confidence interval for the median of the Gamma distribution with shape = 2 and scale = 1.
+
+```{r}
+n <- 1000
+x <- matrix(nrow=n, ncol=2)
+for(i in seq(n)) {
+  xi <- rgamma(100, 2, 1)
+  medx <- median(xi)
+  se <- sd(xi) / sqrt(length(xi))
+  x[i,1] <- medx + qnorm(0.025) * se
+  x[i,2] <- medx + qnorm(0.975) * se
+}
+colMeans(x)
+```
+
+## Challenge 7
+
+[https://fivethirtyeight.com/features/can-you-solve-these-colorful-puzzles/](Puzzler)
+
+You play a game with four balls: One ball is red, one is blue, one is green and one is yellow. They are placed in a box. You draw a ball out of the box at random and note its color. Without replacing the first ball, you draw a second ball and then paint it to match the color of the first. Replace both balls, and repeat the process. The game ends when all four balls have become the same color. What is the expected number of turns to finish the game?
+
+Simulate the answer.
+
+```{r}
+draw <- function(x) sample(x)[c(1,1,3,4)]
+test <- function(ii=c('r','b','g','y')) {
+  i <- 1
+  while(length(unique(ii<-draw(ii))) > 1) i <- i+1
+  i
+}
+N <- 1000
+ans <- numeric(N)
+for(i in seq(N)) {
+  ans[i] <- test()
+}
+mean(ans)
 ```
