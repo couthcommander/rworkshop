@@ -4,6 +4,21 @@ author: "Cole Beck"
 output: html_notebook
 ---
 
+# Navigating RStudio
+
+* Creating scripts (R Script, R Notebook, R Markdown, Shiny Web App)
+* Creating projects
+* Session & Working Directory
+* Environment
+* Files
+* Plots
+* Packages
+* Help
+
+# Harrell's rms
+
+See chapters 1 and 9 of [Biostatistics for Biomedical Research][bbr].
+
 # Setup
 ```{r setup,results='hide'}
 require(Hmisc)
@@ -759,13 +774,14 @@ res[,'bias'] <- res[,'mu'] - true_mu
 ```{r}
 res[1:5,]
 vals <- colMeans(res)
+basicCI <- 2 * mean(x) - quantile(res[,'mu'], probs=c(0.975, 0.025))
 out <- sprintf("empirical SE: %.3f
 MSE: %.3f
 basic bootstrap confidence interval: (%.3f, %.3f)
 coverage probability: %.3f
 mean bias: %.3f
 sample mean: %.3f
-", sd(res[,'mu']), vals['se'], vals['lb'], vals['ub'], vals['coverage'], vals['bias'], mean(x))
+", sd(res[,'mu']), vals['se'], basicCI[1], basicCI[2], vals['coverage'], vals['bias'], mean(x))
 cat(out)
 ```
 
@@ -782,3 +798,5 @@ Wickham's "Tidy Data" philosophy was concurrent with the development of a suite 
 [datasets]: http://biostat.mc.vanderbilt.edu/wiki/Main/DataSets "DataSets"
 
 [tidy]: http://vita.had.co.nz/papers/tidy-data.pdf "Tidy Data"
+
+[bbr]: http://biostat.mc.vanderbilt.edu/tmp/bbr.pdf "Biostatistics for Biomedical Research"
