@@ -1,7 +1,8 @@
 ---
 title: "R workshop"
 author: "Cole Beck"
-output: html_notebook
+output:
+  html_notebook: default
 ---
 
 # Navigating RStudio
@@ -783,6 +784,35 @@ mean bias: %.3f
 sample mean: %.3f
 ", sd(res[,'mu']), vals['se'], basicCI[1], basicCI[2], vals['coverage'], vals['bias'], mean(x))
 cat(out)
+```
+
+# Control Structures
+
+Control structures are used to change if and when lines of code in a program are run.  The control comes from conditions being true or false.
+
+## Root finding with the Newton-Raphson algorithm
+
+The `for` loop has already been introduced.  Two other important control structures are `while` loops and `if` statements.
+
+```{r}
+f <- function(x) x^3 + x^2 - 3*x - 3
+fp <- function(x) 3*x^2 + 2*x - 3
+plot(f, xlim=c(-4,4))
+```
+
+```{r}
+x <- -2
+i <- 1
+while(abs(f(x)) > 1e-8) {
+  x <- x - f(x) / fp(x)
+  i <- i + 1
+  if(i > 20) {
+    print("does not converge")
+    break
+  }
+}
+x
+f(x)
 ```
 
 # Worth Mentioning
