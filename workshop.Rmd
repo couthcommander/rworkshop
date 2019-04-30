@@ -186,6 +186,10 @@ pbc <- upData(pbc,
 html(contents(pbc), maxlevels=10, levelType='table')
 ```
 
+## Exercise 1
+
+Do exercise 1. Pull the example exercise.Rmd from github as your starting template.
+
 ## Descriptive Statistics Without Stratification
 
 ```{r describe,results='asis'}
@@ -438,6 +442,10 @@ html(contents(lead), maxlevels=10, levelType='table')
 html(describe(lead))
 ```
 
+## Exercise 2 & 3
+
+Do exercise 2 & 3.
+
 # Introduction to RMS (Ordinary least squares regression)
 
 The `rms` package includes the `ols` fitting function.  Use `datadist` to compute summaries of the distributional charateristics of the predictors - or simply give it an entire data frame.  `datadist` must be re-run if you add a new predictor or recode an old one.
@@ -653,6 +661,10 @@ Combined partial effects.
 anova(f, ld72, ld73)
 ```
 
+## Exercise 4
+
+Time for exercise 4.
+
 # Cleaning and Importing Data
 
 ## Text files
@@ -845,6 +857,16 @@ There's already a function to compute the power of a two-sample t test.
 power.t.test(n=25, delta=5, sd=5)$power
 ```
 
+## Exercise 5
+
+Time for exercise 5.
+
+# Simulation and Bootstrapping
+
+Simulation is a wonderful tool for really understanding just how well a method performs. Sometimes the modeling and techniques are complex enough that analytical and numerical properties are difficult to ascertain. Simulation can help answer that question by doing a procedure on random data repeatedly and examining how well the technique performs.
+
+Bootstrap sampling is a related area that takes multiple random samples from a data set and performs estimates of statistical properties. It is robust in that it makes few assumptions about the structure of the data.
+
 ## Bootstrap sample
 
 ```{r}
@@ -878,7 +900,7 @@ sample mean: %.3f
 cat(out)
 ```
 
-# Control Structures
+## Control Structures
 
 Control structures are used to change if and when lines of code in a program are run.  The control comes from conditions being true or false.
 
@@ -915,7 +937,7 @@ Wickham's "Tidy Data" philosophy was concurrent with the development of a suite 
 
 ## data.table
 
-`data.table` is another beneficial package for data manipulation.  It provides similar functionality to the `data.frame`, but works well with large data sets.
+`data.table` is another beneficial package for data manipulation.  It provides similar functionality to the `data.frame`, but works well with large data sets. It minimizes memory operations. It is best to develop ones code using either data.frame or data.table from the beginning as they are not exactly equivalent and surprises can happen upon dropping in one for the other.
 
 [datasets]: http://biostat.mc.vanderbilt.edu/wiki/Main/DataSets "DataSets"
 
