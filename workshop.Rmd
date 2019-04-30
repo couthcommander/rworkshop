@@ -1,36 +1,67 @@
 ---
-title: "R workshop"
-author: "Cole Beck"
-output:
-  html_notebook: default
+title: "R Workshop"
+author: "Cole Beck, Shawn Garbett"
+date: "4/30/2019"
+output: html_document
 ---
 
-# Navigating RStudio
+# Foundations
 
-* Creating scripts (R Script, R Notebook, R Markdown, Shiny Web App)
-* Creating projects
-* Session & Working Directory
-* Environment
-* Files
-* Plots
-* Packages
-* Help
+*Does everyone have a working laptop?*
 
-# Harrell's rms
+This course is designed to bring one up to speed on the tools necessary to follow all the examples in Frank Harrell's ``Regression Modeling Strategies''. It assumes a rudimentary knowledge of R or at least having some experience with coding.
 
-See chapters 1 and 9 of [Biostatistics for Biomedical Research][bbr].
+If there are any questions or areas you'd like covered in more detail please do not hesitate to speak up.
 
-# Setup
-```{r setup,results='hide'}
-require(Hmisc)
-knitrSet(lang='markdown', h=4.5)
-options(grType='plotly')
-mu <- markupSpecs$html
+RStudio has multiple panes. One can customize what's open at any point. In general the four quadrants are:
+
+* Upper Left: Open Files
+* Upper Right: Environment and History Browser. Good for seeing what variables are in memory and exploring them.
+* Lower Left: Console. The interactive command to the running R interpretor.
+* Lower Right: Directory browser, Plots, Packages, Help. 
+
+If one accidently closes one, it's easily opened again from the `View` menu. 
+
+Note Menu items have underlines for certain characters. These are shortcuts for `Alt-`*letter* that one can access quickly from the keyboard.
+
+## Creating scripts
+
+R Scripts are simple text files, i.e. not Word or editors that contain formatting information. Just straight text, usually presented in a monospaced font. 
+
+From RStudio, select `File -> New File` and there is a large number of options. The important ones for this class are:
+
+* R Script. A file containing R code that is executable. If the file is open in the upper left pane of RStudio one can click `source` in the upper right of the file and it will execute in the console below.
+* R Notebook. An older version that allows for a preview of the document. The preview is rebuilt on *every* save.
+* R Markdown. Same as R Notebook, but requires a manual `Knit` to construct the document. No preview mode. For documents that take a long time to build this is preferred and is becoming the more common option.
+
+## Creating projects
+
+A project brings together several scripts as a project. One can create a project using `File -> New Project` and select an existing directory or create a blank one as desired. Existing projects can be opened with `File -> Open Project`.
+
+## Session & Working Directory
+
+There are two R sessions going inside R Studio when editing Rmd. One is the console and the other is used to generate Preview sections of documents. This can lead to confusion occasionally as variables that are seen at the console are not what is loaded in the document's environment. The `Run -> Restart R and Run All Chunks` restarts the Rmd environment and reruns all chunks in a document. This has the effect of resynchronizing both environments. 
+
+It is sometimes helpful to communicate versions of packages are loaded when discussing issues. The command `sessionInfo()` provides a nice overview of this that is good for checking package versions loaded.
+
+```{r sessioninfo}
+sessionInfo()
 ```
 
-# R Packages
+The current working directory is available via `getwd()` and settable via `setwd("directory")`. All file loads and saves are relative to the current working directory.
 
-Install the packages `Hmisc, rms, knitr, rmarkdown` through RStudio.
+## Environment
+
+R maintains "environment frames" which are nested up to the top level. Each environment can contain variables in memory. The local environment is seached first then it follows up through the levels.
+
+```{r environment}
+```
+
+## Files
+
+## Packages
+
+Install the packages `Hmisc, rms, knitr, rmarkdown`, `plotly` and `devtools` through RStudio.
 
 Packages contain R code and may often require the installation of other packages.  When I install `Hmisc`, I see that its dependency `acepack` is automatically installed:
 
@@ -63,7 +94,7 @@ downloaded 597 Kb
 * DONE (Hmisc)
 ```
 
-## Install and updating
+### Install and updating via CRAN
 
 Install through CRAN repositories
 
@@ -74,7 +105,9 @@ install.packages(c('Hmisc', 'rms', 'knitr', 'rmarkdown'))
 update.packages(checkBuilt=TRUE, ask=FALSE)
 ```
 
-Install through Github repositories
+### Install and update via Github
+
+Github is a code sharing platform. Packages are typically in a *rawer* state, but it can be important to use sometimes to get the latest bugfix at the risk of introducing a different bug. Installing through Github repositories is done using the `devtools` package.
 
 ```{r, eval=FALSE}
 install.packages('devtools')
@@ -82,7 +115,7 @@ require(devtools)
 install_github('harrelfe/rms')
 ```
 
-## Loading
+### Loading Packages
 
 Note that `library` is a bit of misnomer as R uses packages, not libraries.  From a technical standpoint, it's nice to recognize the distinction.  You may see `require` used in its place.  If the package is not installed, `library` will trigger an error while `require` will return FALSE.  Once loaded the functions created in the package are available to your R session.
 
@@ -91,7 +124,45 @@ library(Hmisc)
 require(Hmisc)
 ```
 
-# Fetching Data, Modifying Variables, and Printing Data Dictionary
+## Help
+
+From the R console one can get help about any function by appending it with a `?`. 
+
+```{r, eval=FALSE}
+?lm
+```
+
+The R maintainers are quite pedantic about requiring package help files on functions up to date, complete and written in proper English. The benefit is that the user now has a reference for just about every function including from community sourced packages.
+
+## Rmarkdown
+
+Earlier versions of this course focused on LaTeX document generation. LaTeX is a wonderful publishing tool (for PDF), that is also as complex as it is rich. Rmarkdown has come a long way to generating very rich documents that compile to either HTML or PDF with very little knowledge of the file formats of either. Given that the focus of this course is on Regression Modeling strategies and not document generation, the current focus is on using Rmarkdown and showing some interactive plots via HTML. Full support and possibilies are shown at [https://rmarkdown.rstudio.com/](https://rmarkdown.rstudio.com/). 
+
+The cheat sheet is available at [https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf)
+
+## Caching
+
+Chunks in Rmarkdown can be cached. I.e., the results of the last computation are saved and it's not rerun until a manual override by clicking on that section is done. It is recommended that one *not* do this as it inevitably leads to confusion when code or data changes are made and the document compilation does not reflect the changes. 
+
+A better approach for long computations is to do these with external scripts and save the results. The report can load these results and present as needed. It's very similar to caching, but is not prone to later confusion as it's a bit more direct that the report is loading the processed data file. In short do large data processing tasks *outside* of reports.
+
+## Harrell's RMS
+
+See chapters 1 and 9 of [Biostatistics for Biomedical Research](http://hbiostat.org/doc/bbr.pdf).
+
+## Setup
+
+Most Rmarkdown documents have a setup section that loads required libraries and sets up some options. The following snippet is the basic setup for this course. It loads the `Hmisc` package. Sets `knitr` to use markdown by default. Sets the graphics option to use `plotly`. It also pulls some html rendering options from the marksup specs for use later and stores this in a global variable `mu`.
+
+```{r setup,results='hide'}
+require(Hmisc)
+knitrSet(lang='markdown', h=4.5)
+options(grType='plotly')
+mu <- markupSpecs$html
+```
+
+
+## Data
 
 The `getHdata` function is used to fetch a dataset from the Vanderbilt [DataSets][datasets] web site.  `upData` is used to
 
@@ -115,16 +186,19 @@ pbc <- upData(pbc,
 html(contents(pbc), maxlevels=10, levelType='table')
 ```
 
-# Descriptive Statistics Without Stratification
+## Descriptive Statistics Without Stratification
 
 ```{r describe,results='asis'}
 # did have results='asis' above
 d <- describe(pbc)
 html(d, size=80, scroll=TRUE)
-plot(d)
+
+p <- plot(d)
+p$Categorical
+p$Continuous
 ```
 
-# Stratified Descriptive Statistics
+## Stratified Descriptive Statistics
 
 Produce stratified quantiles, means/SD, and proportions by treatment group.  Plot the results before rendering as an advanced html table:
 
@@ -135,24 +209,30 @@ Produce stratified quantiles, means/SD, and proportions by treatment group.  Plo
 s <- summaryM(bili + albumin + stage + protime + sex + age + spiders +
               alk.phos + sgot + chol ~ drug, data=pbc,
 							overall=FALSE, test=TRUE)
-plot(s, which='categorical')
-plot(s, which='continuous', vars=1:4)
-plot(s, which='continuous', vars=5:7)
-```
 
-```{r summaryM4}
+
 html(s, caption='Baseline characteristics by randomized treatment',
      exclude1=TRUE, npct='both', digits=3,
      prmsd=TRUE, brmsd=TRUE, msdsize=mu$smaller2)
 ```
 
-# Spike Histogram
+# Plotting
+
+```{r summaryM4plot}
+plot(s, which='categorical')
+plot(s, which='continuous', vars=1:4)
+plot(s, which='continuous', vars=5:7)
+```
+
+
+## Spike Histogram
 
 ```{r histbox,results='asis'}
 p <- with(pbc, histboxp(x=sgot, group=drug, sd=TRUE))
 p
 ```
-# Data Visualization
+
+## Data Visualization
 
 The very low birthweight data set contains data on 671 infants born with a birth weight of under 1600 grams.  We'll plot gestational age by birthweight using three graphics systems: base graphics, ggplot, and plotly.
 
@@ -162,7 +242,7 @@ getHdata(vlbw)
 vlbw <- vlbw[complete.cases(vlbw[,c('sex','dead','gest','bwt')]),]
 ```
 
-## Base
+## Base Graphics Example
 
 Build each element into your plot.
 
@@ -179,7 +259,7 @@ legend(x=38, y=1000, legend=c('F:0','F:1','M:0','M:1'), col=c('black','black','g
 ```
 
 
-## ggplot2
+## ggplot2 Example
 
 Given a data set, choose the aesthetic mapping and geometry layer.
 
@@ -210,14 +290,16 @@ plot_ly(type="box") %>%
   add_boxplot(y = grps[['male.1']][,'bwt'], name='M:1')
 ```
 
-# Cardiovascular risk factor data
+# Models 
+
+## Cardiovascular risk factor data
 
 ```{r}
 getHdata(diabetes)
 html(contents(diabetes), levelType='table')
 ```
 
-# Formulas
+## Formulas
 
 The tilde is used to create a model formula, which consists of a left-hand side and right-hand side.  Many R functions utilize formulas, such as plotting functions and model-fitting functions.  The left-hand side consists of the response variable, while the right-hand side may contain several terms.  You may see the following operators within a formula.
 
@@ -229,7 +311,7 @@ The tilde is used to create a model formula, which consists of a left-hand side 
 
 See ?formula for more examples.
 
-# Models
+## Model Fitting
 
 The most simple model-fitting function is `lm`, which is used to fit linear models.  It's primary argument is a formula.  Using the diabetes data set, we can fit waist size by weight.
 
@@ -277,7 +359,7 @@ p <- qplot(weight, waist, data=diab)
 p + geom_smooth(method="loess")
 ```
 
-# Data Manipulation
+## Data Manipulation
 
 The Dominican Republic Hypertension dataset contains data on gender, age, and systolic and diastolic blood pressure from several villages in the DR.
 
@@ -339,7 +421,7 @@ aggregate(sbp ~ gender, data=DominicanHTN, FUN=mean)
 aggregate(age ~ village + gender, DominicanHTN, median)
 ```
 
-# Rosner's lead data
+## Rosner's lead data
 
 The `lead` exposure dataset was collected to study the well-being of childen who lived near a lead smelting plant.  The following analysis considers the lead exposure levels in 1972 and 1973, as well as age and the finger-wrist tapping score `maxfwt`.
 
@@ -356,9 +438,11 @@ html(contents(lead), maxlevels=10, levelType='table')
 html(describe(lead))
 ```
 
-# Ordinary least squares regression
+# Introduction to RMS (Ordinary least squares regression)
 
 The `rms` package includes the `ols` fitting function.  Use `datadist` to compute summaries of the distributional charateristics of the predictors - or simply give it an entire data frame.  `datadist` must be re-run if you add a new predictor or recode an old one.
+
+Note: The `ols` function is *not* covered in the main course. Generalized least squares is. Ordinary least squares does not handle data that has correlation between residuals. It is covered here to give a simple overview of the structure of models in RMS. 
 
 ```{r}
 require(rms)
@@ -569,7 +653,7 @@ Combined partial effects.
 anova(f, ld72, ld73)
 ```
 
-# Importing Data
+# Cleaning and Importing Data
 
 ## Text files
 
@@ -599,7 +683,7 @@ Allows data queries.
 * `foreign` package
 * Stat/Transfer - not free nor open source
 
-# Data Cleaning
+## Data Cleaning
 
 An R `data.frame` consists of a collection of values.  In a well-structured data set, each value is associated with a variable (column) and observation (row).  Data sets often need to be manipulated to become well-structured.
 
