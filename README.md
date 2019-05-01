@@ -9,4 +9,8 @@ Hmisc::getRs("exercises.Rmd", "couthcommander", "rworkshop")
 Hmisc::getRs("answers.Rmd", "couthcommander", "rworkshop")
 ```
 
+View [course material](https://couthcommander.github.io/rworkshop/workshop.html).
+
 View my [answers](https://couthcommander.github.io/rworkshop/answers.nb.html).
+
+View the [original Intro to R](https://couthcommander.github.io/rworkshop/intro.html).

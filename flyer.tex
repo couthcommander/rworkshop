@@ -1,0 +1,136 @@
+\documentclass[twocolumn]{article}
+
+\usepackage{framed}
+\usepackage{gillius2}
+\usepackage{nopageno}
+\usepackage[margin=0.75in]{geometry}
+\setlength{\columnseprule}{0.15pt}
+\setlength{\parskip}{2mm}
+
+\renewcommand{\familydefault}{\sfdefault}
+
+\begin{document}
+
+\textbf{\LARGE{\textsc{R \& RStudio Workshop}}}
+
+\center{Monday, May 13\textsuperscript{th} 2019, 9:00am--4:00pm}
+
+\vspace*{\fill}
+
+\begin{flushleft}
+
+\textbf{Instructor:}
+
+Shawn Garbett, MS
+
+\texttt{email:Shawn.Garbett@vumc.org}
+
+Sr. Application Developer
+
+Vanderbilt University Medical Center
+\end{flushleft}
+
+\vspace*{\fill}
+
+\begin{flushleft}
+\textbf{Location:}
+
+Vanderbilt University Alumni Hall
+
+2205 West End Avenue, Rooms 201 and 202
+
+Nashville, TN 37203
+\end{flushleft}
+
+\vspace*{\fill}
+
+\begin{flushleft}
+
+\textbf{Requirements:}
+
+Rudimentary Knowledge of Programming
+
+Laptop with R, and RStudio installed.
+
+\end{flushleft}
+
+\vspace*{\fill}
+
+\begin{flushleft}
+
+\textbf{Installing R}
+
+Follow the instructions on \texttt{https://mirrors.nics.utk.edu/cran/}.
+
+\textbf{Install RStudio}
+
+Find the appropriate installer for your platform at \texttt{https://www.rstudio.com/}. Free installers are toward the bottom of the download page.
+
+\textbf{R Packages}
+
+Install the packages \texttt{Hmisc}, \texttt{rms}, \texttt{knitr}, and \texttt{rmarkdown} using RStudio and any pending upgrades.
+
+From RStudio, \texttt{Tools $\rightarrow$ Install Packages}
+
+Or alternatively from the R command line do the following.
+
+\begin{framed}
+\begin{verbatim}
+install.packages(c('Hmisc', 'rms', 'knitr',
+  'rmarkdown', 'plotly', 'devtools'))
+  
+update.packages(checkBuilt=TRUE, ask=FALSE)
+\end{verbatim}
+\end{framed}
+
+\end{flushleft}
+
+\vspace*{\fill}
+
+\pagebreak
+
+\begin{flushleft}
+
+\vspace*{0.5cm}
+
+\textbf{Schedule:}
+
+\begin{tabular}[H]{lll}
+9:00 & 10:00  & Foundations \\
+10:15 & 11:00 & Plotting \\
+11:00 & 12:00 & Models and Data Manipulation \\
+12:00 & 1:00  & Lunch \\
+1:00  & 2:00  & Introduction to RMS (OLS) \\
+2:15  & 3:00  & Cleaning Data \\
+3:00  & 4:00  & Simulation \\
+\end{tabular}
+
+\vspace*{\fill}
+
+\textbf{Course Materials}
+
+Course materials were created by Cole Beck and available online at
+\texttt{https://github.com/couthcommander/rworkshop}. The answers to
+all exercises are posted as well. It is \emph{not} recommended to use
+these until one has at least attempted the exercises. There is an intro document that will not be covered in the course and is a basic guide to programming in R. This is a good quick review of programming in R.
+
+
+\vspace*{\fill}
+
+\textbf{Recommended Additional Materials}
+
+RStudio has a variety of helpful ``cheatsheets'' available at \texttt{rstudio.com/resources/cheatsheets}. We recommend the following if desired:
+
+\begin{itemize}
+\item RStudio IDE
+\item R Markdown
+\item Base R
+\end{itemize}
+
+\vspace*{\fill}
+
+Day 1 of Regression Modeling Strategies Short Course by Frank Harrell. Course includes applications to Linear Models, Logistic and Ordinal Regression and Survival Analysis.
+
+\end{flushleft}
+
+\end{document}
