@@ -55,6 +55,14 @@ The current working directory is available via `getwd()` and settable via `setwd
 R maintains "environment frames" which are nested up to the top level. Each environment can contain variables in memory. The local environment is seached first then it follows up through the levels.
 
 ```{r environment}
+x <- 3
+f <- function()
+{ # One can view the paranthesis as capturing a frame
+  x <- 4   # Local variable inner frame
+  cat("This is the inner 'x'", x, "\n") 
+}
+f()
+cat("This is the outer 'x'", x, "\n")
 ```
 
 ## Files
@@ -99,6 +107,8 @@ downloaded 597 Kb
 Install through CRAN repositories
 
 ```{r, eval=FALSE}
+# Having code to install packages insider your Rmarkdown is bad practice. Don't do this.
+# This code is marked `eval=FALSE` in the Rmarkdown chunk so it is not evaluated.
 # install several packages
 install.packages(c('Hmisc', 'rms', 'knitr', 'rmarkdown'))
 # update all packages
@@ -139,6 +149,12 @@ The R maintainers are quite pedantic about requiring package help files on funct
 Earlier versions of this course focused on LaTeX document generation. LaTeX is a wonderful publishing tool (for PDF), that is also as complex as it is rich. Rmarkdown has come a long way to generating very rich documents that compile to either HTML or PDF with very little knowledge of the file formats of either. Given that the focus of this course is on Regression Modeling strategies and not document generation, the current focus is on using Rmarkdown and showing some interactive plots via HTML. Full support and possibilies are shown at [https://rmarkdown.rstudio.com/](https://rmarkdown.rstudio.com/). 
 
 The cheat sheet is available at [https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf)
+
+## Best Practices
+
+A blog post [https://t.co/ZBk1OrTXYp](RMarkdown Driven Development) by Emily Riederer is an excellent introduction to best practices in producing statistical documents using Rmarkdown.
+
+One takeaway is to avoid the general  pitfall of putting large amounts of data processing *inside* ones Rmarkdown reports, then minor changes to the report can require hours to compile. Large data processing and wrangling tasks should be done in scripts *outside* the report. The report should load the results of this process.
 
 ## Caching
 
@@ -320,7 +336,7 @@ See ?formula for more examples.
 The most simple model-fitting function is `lm`, which is used to fit linear models.  It's primary argument is a formula.  Using the diabetes data set, we can fit waist size by weight.
 
 ```{r}
-(m <- lm(waist ~ weight, data=diabetes))
+m <- lm(waist ~ weight, data=diabetes)
 ```
 
 This creates an `lm` object, and several functions can be used on model objects.  The internal structure of a model object is a list - its elements may be accessed just like a list.
