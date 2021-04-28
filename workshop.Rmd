@@ -1,8 +1,17 @@
 ---
 title: "R Workshop"
 author: "Cole Beck, Shawn Garbett"
-date: "4/30/2019"
-output: html_document
+date: "5/10/2021"
+output:
+  html_document: default
+  rmdformats::readthedown:
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    highlight: tango
+    use_bookdown: true
+    toc_depth: 3
+    fig_caption: true
 ---
 
 # Foundations
@@ -17,10 +26,10 @@ RStudio has multiple panes. One can customize what's open at any point. In gener
 
 * Upper Left: Open Files
 * Upper Right: Environment and History Browser. Good for seeing what variables are in memory and exploring them.
-* Lower Left: Console. The interactive command to the running R interpretor.
+* Lower Left: Console. The interactive command to the running R interpreter.
 * Lower Right: Directory browser, Plots, Packages, Help. 
 
-If one accidently closes one, it's easily opened again from the `View` menu. 
+If one accidentally closes one, it's easily opened again from the `View` menu. 
 
 Note Menu items have underlines for certain characters. These are shortcuts for `Alt-`*letter* that one can access quickly from the keyboard.
 
@@ -52,12 +61,12 @@ The current working directory is available via `getwd()` and settable via `setwd
 
 ## Environment
 
-R maintains "environment frames" which are nested up to the top level. Each environment can contain variables in memory. The local environment is seached first then it follows up through the levels.
+R maintains "environment frames" which are nested up to the top level. Each environment can contain variables in memory. The local environment is searched first then it follows up through the levels.
 
 ```{r environment}
 x <- 3
 f <- function()
-{ # One can view the paranthesis as capturing a frame
+{ # One can view the parenthesis as capturing a frame
   x <- 4   # Local variable inner frame
   cat("This is the inner 'x'", x, "\n") 
 }
@@ -146,15 +155,15 @@ The R maintainers are quite pedantic about requiring package help files on funct
 
 ## Rmarkdown
 
-Earlier versions of this course focused on LaTeX document generation. LaTeX is a wonderful publishing tool (for PDF), that is also as complex as it is rich. Rmarkdown has come a long way to generating very rich documents that compile to either HTML or PDF with very little knowledge of the file formats of either. Given that the focus of this course is on Regression Modeling strategies and not document generation, the current focus is on using Rmarkdown and showing some interactive plots via HTML. Full support and possibilies are shown at [https://rmarkdown.rstudio.com/](https://rmarkdown.rstudio.com/). 
+Earlier versions of this course focused on LaTeX document generation. LaTeX is a wonderful publishing tool (for PDF), that is also as complex as it is rich. Rmarkdown has come a long way to generating very rich documents that compile to either HTML or PDF with very little knowledge of the file formats of either. Given that the focus of this course is on Regression Modeling strategies and not document generation, the current focus is on using Rmarkdown and showing some interactive plots via HTML. Full support and possibilities are shown at [https://rmarkdown.rstudio.com/](https://rmarkdown.rstudio.com/). 
 
-The cheat sheet is available at [https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf)
+The cheat sheet is available at [https://raw.githubusercontent.com/rstudio/cheatsheets/master/rmarkdown-2.0.pdf](https://raw.githubusercontent.com/rstudio/cheatsheets/master/rmarkdown-2.0.pdf), or through Rstudio's menu bar: `Help -> Cheetsheets -> R Markdown Cheet Sheet`.
 
 ## Best Practices
 
 A blog post [https://t.co/ZBk1OrTXYp](RMarkdown Driven Development) by Emily Riederer is an excellent introduction to best practices in producing statistical documents using Rmarkdown.
 
-One takeaway is to avoid the general  pitfall of putting large amounts of data processing *inside* ones Rmarkdown reports, then minor changes to the report can require hours to compile. Large data processing and wrangling tasks should be done in scripts *outside* the report. The report should load the results of this process.
+One takeaway is to avoid the general pitfall of putting large amounts of data processing *inside* ones Rmarkdown reports, then minor changes to the report can require hours to compile. Large data processing and wrangling tasks should be done in scripts *outside* the report. The report should load the results of this process.
 
 ## Caching
 
@@ -164,29 +173,29 @@ A better approach for long computations is to do these with external scripts and
 
 ## Harrell's RMS
 
-See chapters 1 and 9 of [Biostatistics for Biomedical Research](http://hbiostat.org/doc/bbr.pdf).
+See chapters 1 and 9 of [Biostatistics for Biomedical Research][bbr].
 
 ## Setup
 
-Most Rmarkdown documents have a setup section that loads required libraries and sets up some options. The following snippet is the basic setup for this course. It loads the `Hmisc` package. Sets `knitr` to use markdown by default. Sets the graphics option to use `plotly`. It also pulls some html rendering options from the marksup specs for use later and stores this in a global variable `mu`.
+Most Rmarkdown documents have a setup section that loads required libraries and sets up some options. The following snippet is the basic setup for this course. It loads the `Hmisc` package. Sets `knitr` to use markdown by default. Sets the graphics option to use `plotly`. It also pulls some HTML rendering options from the markup specs for use later and stores this in a global variable `mu`.
 
 ```{r setup,results='hide'}
 require(Hmisc)
-knitrSet(lang='markdown', h=4.5)
-options(grType='plotly')
-mu <- markupSpecs$html
+knitrSet(lang='markdown', h=4.5, fig.path='png/', fig.align='left')
+# knitrSet redirects all messages to messages.txt
+options(grType='plotly') # for certain graphics functions
+mu <- markupSpecs$html   # markupSpecs is in Hmisc
 ```
-
 
 ## Data
 
-The `getHdata` function is used to fetch a dataset from the Vanderbilt [DataSets][datasets] web site.  `upData` is used to
+The `getHdata` function is used to fetch a dataset from the Vanderbilt Biostatistics [DataSets][datasets] web site.  `upData` is used to
 
 - create a new variable from an old one
 - add labels to 2 variables
 - add units to the new variable
 - remove the old variable
-- automatically move units of measurements from parenthetical expressions in labels to separate `units` attributed used by `Hmisc` and `rms` functions for table making and graphics
+- automatically move units of measurements from parenthetical expressions in labels to separate `units` attributes used by `Hmisc` and `rms` functions for table making and graphics
 
 `contents` is used to print a data dictionary, run through an `html` method for nicer output.
 
@@ -220,20 +229,15 @@ p$Continuous
 
 ## Stratified Descriptive Statistics
 
-Produce stratified quantiles, means/SD, and proportions by treatment group.  Plot the results before rendering as an advanced html table:
+Produce stratified quantiles, means/SD, and proportions by treatment group.  Plot the results before rendering as an advanced HTML table:
 
 - categorical variables: a single dot chart
 - continuous variables: a series of extended box plots
 
-```{r summaryM,results='asis'}
+```{r summaryM}
 s <- summaryM(bili + albumin + stage + protime + sex + age + spiders +
               alk.phos + sgot + chol ~ drug, data=pbc,
 							overall=FALSE, test=TRUE)
-
-
-html(s, caption='Baseline characteristics by randomized treatment',
-     exclude1=TRUE, npct='both', digits=3,
-     prmsd=TRUE, brmsd=TRUE, msdsize=mu$smaller2)
 ```
 
 # Plotting
@@ -244,8 +248,15 @@ plot(s, which='continuous', vars=1:4)
 plot(s, which='continuous', vars=5:7)
 ```
 
+```{r summaryMhtml, results='asis'}
+html(s, caption='Baseline characteristics by randomized treatment',
+     exclude1=TRUE, npct='both', digits=3,
+     prmsd=TRUE, brmsd=TRUE, msdsize=mu$smaller2)
+```
 
 ## Spike Histogram
+
+Show data for continuous variable stratified by treatment.
 
 ```{r histbox,results='asis'}
 p <- with(pbc, histboxp(x=sgot, group=drug, sd=TRUE))
@@ -277,7 +288,6 @@ points(jitter(grps[['male.0']][,'gest'], 2), grps[['male.0']][,'bwt'], col='gray
 points(grps[['male.0']][,'bwt'] ~ jitter(grps[['male.0']][,'gest'], 2), col='gray', pch=3)
 legend(x=38, y=1000, legend=c('F:0','F:1','M:0','M:1'), col=c('black','black','gray','gray'), pch=c(1,0,4,3))
 ```
-
 
 ## ggplot2 Example
 
@@ -441,9 +451,13 @@ aggregate(sbp ~ gender, data=DominicanHTN, FUN=mean)
 aggregate(age ~ village + gender, DominicanHTN, median)
 ```
 
+## Exercise 2 & 3
+
+Do exercise 2 & 3.
+
 ## Rosner's lead data
 
-The `lead` exposure dataset was collected to study the well-being of childen who lived near a lead smelting plant.  The following analysis considers the lead exposure levels in 1972 and 1973, as well as age and the finger-wrist tapping score `maxfwt`.
+The `lead` exposure dataset was collected to study the well-being of children who lived near a lead smelting plant.  The following analysis considers the lead exposure levels in 1972 and 1973, as well as age and the finger-wrist tapping score `maxfwt`.
 
 ```{r contents,results='asis'}
 getHdata(lead)
@@ -458,13 +472,9 @@ html(contents(lead), maxlevels=10, levelType='table')
 html(describe(lead))
 ```
 
-## Exercise 2 & 3
-
-Do exercise 2 & 3.
-
 # Introduction to RMS (Ordinary least squares regression)
 
-The `rms` package includes the `ols` fitting function.  Use `datadist` to compute summaries of the distributional charateristics of the predictors - or simply give it an entire data frame.  `datadist` must be re-run if you add a new predictor or recode an old one.
+The `rms` package includes the `ols` fitting function.  Use `datadist` to compute summaries of the distributional characteristics of the predictors - or simply give it an entire data frame.  `datadist` must be re-run if you add a new predictor or recode an old one.
 
 Note: The `ols` function is *not* covered in the main course. Generalized least squares is. Ordinary least squares does not handle data that has correlation between residuals. It is covered here to give a simple overview of the structure of models in RMS. 
 
@@ -823,6 +833,10 @@ rbind(genderAnimal[[1]], genderAnimal[[2]], genderAnimal[[3]])
 do.call(rbind, genderAnimal)
 ```
 
+## Exercise 5
+
+Time for exercise 5.
+
 # Simulation
 
 Plot mean while sampling from normal distribution
@@ -872,10 +886,6 @@ There's already a function to compute the power of a two-sample t test.
 ```{r}
 power.t.test(n=25, delta=5, sd=5)$power
 ```
-
-## Exercise 5
-
-Time for exercise 5.
 
 # Simulation and Bootstrapping
 
@@ -945,6 +955,10 @@ x
 f(x)
 ```
 
+## Exercise 6 & 7
+
+Final exercises, 6 & 7.
+
 # Worth Mentioning
 
 ## tidyverse
@@ -955,8 +969,13 @@ Wickham's "Tidy Data" philosophy was concurrent with the development of a suite 
 
 `data.table` is another beneficial package for data manipulation.  It provides similar functionality to the `data.frame`, but works well with large data sets. It minimizes memory operations. It is best to develop ones code using either data.frame or data.table from the beginning as they are not exactly equivalent and surprises can happen upon dropping in one for the other.
 
-[datasets]: http://biostat.mc.vanderbilt.edu/wiki/Main/DataSets "DataSets"
+# Computing Environment[^1] {#compenv}
+`r mu$session()`
+
+[^1]: `mu` is a copy of the part of the `Hmisc` package object `markupSpecs` that is for html.  It includes a function `session` that renders the session environment (including package versions) in html.
+
+[datasets]: https://hbiostat.org/data/ "DataSets"
 
 [tidy]: http://vita.had.co.nz/papers/tidy-data.pdf "Tidy Data"
 
-[bbr]: http://fharrell.com/doc/bbr.pdf "Biostatistics for Biomedical Research"
+[bbr]: http://hbiostat.org/doc/bbr.pdf "Biostatistics for Biomedical Research"
