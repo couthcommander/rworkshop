@@ -74,8 +74,6 @@ f()
 cat("This is the outer 'x'", x, "\n")
 ```
 
-## Files
-
 ## Packages
 
 Install the packages `Hmisc, rms, knitr, rmarkdown`, `plotly` and `devtools` through RStudio.
@@ -161,7 +159,7 @@ The cheat sheet is available at [https://raw.githubusercontent.com/rstudio/cheat
 
 ## Best Practices
 
-A blog post [https://t.co/ZBk1OrTXYp](RMarkdown Driven Development) by Emily Riederer is an excellent introduction to best practices in producing statistical documents using Rmarkdown.
+A blog post [RMarkdown Driven Development][reiderer] by Emily Riederer is an excellent introduction to best practices in producing statistical documents using Rmarkdown.
 
 One takeaway is to avoid the general pitfall of putting large amounts of data processing *inside* ones Rmarkdown reports, then minor changes to the report can require hours to compile. Large data processing and wrangling tasks should be done in scripts *outside* the report. The report should load the results of this process.
 
@@ -973,6 +971,8 @@ Wickham's "Tidy Data" philosophy was concurrent with the development of a suite 
 `r mu$session()`
 
 [^1]: `mu` is a copy of the part of the `Hmisc` package object `markupSpecs` that is for html.  It includes a function `session` that renders the session environment (including package versions) in html.
+
+[reiderer]: https://t.co/ZBk1OrTXYp
 
 [datasets]: https://hbiostat.org/data/ "DataSets"
 

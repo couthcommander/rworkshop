@@ -5,3 +5,6 @@
 *.pdf
 *.Rproj
 messages.txt
+*.aux
+*.log
+*formal*
