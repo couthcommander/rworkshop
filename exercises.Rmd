@@ -171,7 +171,7 @@ The CDC has many available data sets.  Take a look at the demographics data file
 ```{r}
 ```
 
-2. Keep only the following variables: `RIAGENDR, RIDAGEYR, INDHHIND2, DMDHHSIZ`.  Describe the data.
+2. Keep only the following variables: `RIAGENDR, RIDAGEYR, INDHHIN2, DMDHHSIZ`.  Describe the data.
 
 ```{r}
 ```
