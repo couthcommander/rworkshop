@@ -534,7 +534,7 @@ qqline(r)
 
 ## Plotting partial effects
 
-`Predict` and `pplot` make one plot for each predictor.  Predictors not shown in plot are set to constants (continuous:median, categorical:mode).  0.95 pointwise confidence limits for $\hat{E}(y|x)$ are shown; use `conf.int=FALSE` to suppress CLs.
+`Predict` and `plotp` make one plot for each predictor.  Predictors not shown in plot are set to constants (continuous:median, categorical:mode).  0.95 pointwise confidence limits for $\hat{E}(y|x)$ are shown; use `conf.int=FALSE` to suppress CLs.
 
 ```{r}
 plotp(Predict(f))
@@ -766,10 +766,10 @@ tryCatch(strsplit(pets2[,'ind'], '\\.'), error=function(e){ e })
 First `for` loop, allows iterating over a sequence.
 
 ```{r}
-genderAnimal <- strsplit(as.character(pets2[,'ind']), '\\.')
-pets2[,c('gender','animal')] <- NA
+sexAnimal <- strsplit(as.character(pets2[,'ind']), '\\.')
+pets2[,c('sex','animal')] <- NA
 for(i in seq(nrow(pets2))) {
-  pets2[i, c('gender','animal')] <- genderAnimal[[i]]
+  pets2[i, c('sex','animal')] <- sexAnimal[[i]]
 }
 pets2[,'ind'] <- NULL
 pets2
@@ -798,7 +798,7 @@ cbind(distribution=x[c(1,3,5,7),'distribution'], unstack(x, form=value~stat))
 ```{r}
 employees <- data.frame(id=1:4, Name=c('Eddie','Andrea','Steve','Theresa'),
                         job=c('engineer','accountant','statistician','technician'))
-set.seed(10)
+set.seed(11)
 hours <- data.frame(id=sample(4, 10, replace=TRUE),
                     week=1:10, hours=sample(30:60, 10, replace=TRUE))
 merge(employees, hours)
@@ -824,11 +824,11 @@ empHours[!is.na(empHours[,'week']), c('id','week','hours')]
 ## Combining data
 
 ```{r}
-rbind(genderAnimal[[1]], genderAnimal[[2]], genderAnimal[[3]])
+rbind(sexAnimal[[1]], sexAnimal[[2]], sexAnimal[[3]])
 ```
 
 ```{r}
-do.call(rbind, genderAnimal)
+do.call(rbind, sexAnimal)
 ```
 
 ## Exercise 5
