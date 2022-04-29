@@ -1,7 +1,7 @@
 ---
 title: "R Workshop"
 author: "Cole Beck, Shawn Garbett"
-date: "5/10/2021"
+date: "5/09/2022"
 output:
   html_document: default
   rmdformats::readthedown:
@@ -43,6 +43,8 @@ From RStudio, select `File -> New File` and there is a large number of options. 
 * R Notebook. An older version that allows for a preview of the document. The preview is rebuilt on *every* save.
 * R Markdown. Same as R Notebook, but requires a manual `Knit` to construct the document. No preview mode. For documents that take a long time to build this is preferred and is becoming the more common option.
 
+A common question is "Which file type should I choose?" It never hurts to start with a basic R script, as once the code is written it can be sourced or even copied and pasted into one of the other documents. For writing code that will import data or perform data manipulation, I prefer R scripts. For teaching with interactive examples, I prefer using R notebook. I like to use R markdown when creating output that will be shared (either as HTML or PDF).
+
 ## Creating projects
 
 A project brings together several scripts as a project. One can create a project using `File -> New Project` and select an existing directory or create a blank one as desired. Existing projects can be opened with `File -> Open Project`.
@@ -76,7 +78,7 @@ cat("This is the outer 'x'", x, "\n")
 
 ## Packages
 
-Install the packages `Hmisc, rms, knitr, rmarkdown`, `plotly` and `devtools` through RStudio.
+Install the packages `Hmisc, rms, knitr, rmarkdown`, and `plotly` through RStudio.
 
 Packages contain R code and may often require the installation of other packages.  When I install `Hmisc`, I see that its dependency `acepack` is automatically installed:
 
@@ -117,19 +119,22 @@ Install through CRAN repositories
 # Having code to install packages insider your Rmarkdown is bad practice. Don't do this.
 # This code is marked `eval=FALSE` in the Rmarkdown chunk so it is not evaluated.
 # install several packages
-install.packages(c('Hmisc', 'rms', 'knitr', 'rmarkdown'))
+install.packages(c('Hmisc', 'rms', 'knitr', 'rmarkdown', 'plotly'))
 # update all packages
-update.packages(checkBuilt=TRUE, ask=FALSE)
+update.packages(checkBuilt = TRUE, ask = FALSE)
 ```
 
 ### Install and update via Github
 
-Github is a code sharing platform. Packages are typically in a *rawer* state, but it can be important to use sometimes to get the latest bugfix at the risk of introducing a different bug. Installing through Github repositories is done using the `devtools` package.
+Github is a code sharing platform. Packages are typically in a *rawer* state, but it can be important to use sometimes to get the latest bugfix at the risk of introducing a different bug. Installing through Github repositories is done using the `remotes` package.
 
 ```{r, eval=FALSE}
-install.packages('devtools')
-require(devtools)
+install.packages('remotes')
+require(remotes)
 install_github('harrelfe/rms')
+# [package]::[function]() is a common syntax that shows what package is associated with the given function
+# for example, this works like above but explicitly tells us we're using the "remotes" package
+# remotes::install_github('harrelfe/rms')
 ```
 
 ### Loading Packages
@@ -221,7 +226,8 @@ d <- describe(pbc)
 html(d, size=80, scroll=TRUE)
 
 p <- plot(d)
-p$Categorical
+# "p" has two named elements that we can access with "$"
+p$Categorical # or, p[['Categorical']]
 p$Continuous
 ```
 
@@ -273,18 +279,27 @@ vlbw <- vlbw[complete.cases(vlbw[,c('sex','dead','gest','bwt')]),]
 
 ## Base Graphics Example
 
-Build each element into your plot.
+Empty canvas - add each element into your plot.
 
 ```{r, fig.width = 6}
+# "grps" is a list with each combination of sex/dead
 grps <- split(vlbw[,c('gest','bwt')], vlbw[,c('sex','dead')])
+# default "plot" function; set up parameters but with no lines/points because type 'n'
 plot(c(22,40), c(400,1600), type='n', xlab='Gestational Age', ylab='Birth Weight (grams)', axes=FALSE)
+# axis 1 is below plot
 axis(1, at=c(22,28,34,40), labels=c(22,28,34,40))
+# axis 2 is left of plot
 axis(2, at=seq(400,1600,by=400), labels=seq(400,1600,by=400))
+## four different methods to add points to plot area
+# data.frame with two columns: 1st column is associated with x variable
 points(grps[['female.0']], col='black', pch=1)
-points(grps[['female.1']][,'gest'], grps[['female.1']][,'bwt'], col='black', pch=0)
-points(jitter(grps[['male.0']][,'gest'], 2), grps[['male.0']][,'bwt'], col='gray', pch=4)
+# two arguments: first vector is associated with x variable
+points(grps[['female.1']][,'gest'], grps[['female.1']][,'bwt'], col='gray', pch=0)
+# like above, but jitter adds noise so points have less overlap
+points(jitter(grps[['male.0']][,'gest'], 2), grps[['male.0']][,'bwt'], col='black', pch=2)
+# LHS ~ RHS: with tilde, the left hand side is associated with y variable
 points(grps[['male.1']][,'bwt'] ~ jitter(grps[['male.1']][,'gest'], 2), col='gray', pch=3)
-legend(x=38, y=1000, legend=c('F:0','F:1','M:0','M:1'), col=c('black','black','gray','gray'), pch=c(1,0,4,3))
+legend(x=37, y=1000, legend=c('F:alive','F:dead','M:alive','M:dead'), col=c('black','gray','black','gray'), pch=c(1,0,2,3))
 ```
 
 ## ggplot2 Example
@@ -292,6 +307,7 @@ legend(x=38, y=1000, legend=c('F:0','F:1','M:0','M:1'), col=c('black','black','g
 Given a data set, choose the aesthetic mapping and geometry layer.
 
 ```{r}
+# `as.factor(dead)` makes categorical variable rather than continuous
 p <- ggplot(data=vlbw) + aes(x=gest, y=bwt, color=sex, shape=as.factor(dead)) + geom_point()
 p
 ```
@@ -311,6 +327,8 @@ ggplotly(p)
 ```
 
 ```{r}
+# plotly uses pipe operator (%>%) from magrittr package
+# in this context it works much like "+" does with ggplot
 plot_ly(type="box") %>%
   add_boxplot(y = grps[['female.0']][,'bwt'], name='F:0') %>%
   add_boxplot(y = grps[['female.1']][,'bwt'], name='F:1') %>%
@@ -359,12 +377,16 @@ This creates an `lm` object, and several functions can be used on model objects.
 
 ```{r}
 names(m)
+# can access named elements with "$"
 m$coefficients
 coef(m)
 head(fitted(m))
+# defaut "predict" gives same results
+# sum(abs(fitted(m) - predict(m)) > 1e-8)
 predict(m, data.frame(weight=c(150, 200, 250)))
 head(residuals(m))
-vcov(m)
+vcov(m) # variance-covariance matrix
+# "summary" produces additional information about model
 summary(m)
 coef(summary(m))
 anova(m)
@@ -375,8 +397,11 @@ anova(m)
 Create a scatterplot of weight and waist size.
 
 ```{r}
+# `qplot` can create default ggplot output
 p <- qplot(weight, waist, data=diabetes)
 p + geom_smooth(method="lm")
+# the above uses the implied formula y~x
+# p + geom_smooth(method="lm", formula = y ~ x)
 ```
 
 Remove missing values and fit with LOESS curve.
@@ -398,17 +423,26 @@ html(describe(DominicanHTN))
 
 ## Adding variables or transformations
 
+The data.frame bracket syntax is data.frame[row_selection, column_selection].
+
 ```{r}
+# create "mean arterial pressure"
 DominicanHTN[,'map'] <- (DominicanHTN[,'sbp'] + DominicanHTN[,'dbp'] * 2) / 3
+# use `as.numeric` to convert TRUE/FALSE into 1/0
 DominicanHTN[,'male'] <- as.numeric(DominicanHTN[,'gender'] == 'Male')
 DominicanHTN[1:5,]
 ```
+
+In this example, I collapse a variable into smaller bins - which should generally be avoided.
 
 ```{r}
 qage <- quantile(DominicanHTN[,'age'])
 qage[1] <- qage[1]-1
 qage
 DominicanHTN[,'ageGrp'] <- cut(DominicanHTN[,'age'], breaks=qage)
+# could easily specify other breakpoints
+# levels(cut(DominicanHTN[,'age'], breaks = c(0, 18, 100)))
+# levels(cut(DominicanHTN[,'age'], breaks = seq(10, 100, by = 10)))
 ```
 
 ## Filter
@@ -424,6 +458,8 @@ cojMen
 ## Sort
 
 ```{r}
+order(cojMen[,'age'], decreasing=TRUE) # first value is element number with highest age
+# use row numbers to re-order a data.frame
 cojMen[order(cojMen[,'age'], decreasing=TRUE),]
 ```
 
@@ -447,6 +483,8 @@ aggregate(sbp ~ gender, data=DominicanHTN, FUN=mean)
 
 ```{r}
 aggregate(age ~ village + gender, DominicanHTN, median)
+# easy to change statistical measure, or function
+# aggregate(age ~ village + gender, DominicanHTN, max)
 ```
 
 ## Exercise 2 & 3
