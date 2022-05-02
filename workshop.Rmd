@@ -162,11 +162,15 @@ Earlier versions of this course focused on LaTeX document generation. LaTeX is a
 
 The cheat sheet is available at [https://raw.githubusercontent.com/rstudio/cheatsheets/master/rmarkdown-2.0.pdf](https://raw.githubusercontent.com/rstudio/cheatsheets/master/rmarkdown-2.0.pdf), or through Rstudio's menu bar: `Help -> Cheetsheets -> R Markdown Cheet Sheet`.
 
+[Quarto][quarto] is a next generation version of R Markdown from RStudio. Users are encouraged to evaluate it as an alternative, though it must be installed in addition to R and RStudio.
+
 ## Best Practices
 
 A blog post [RMarkdown Driven Development][reiderer] by Emily Riederer is an excellent introduction to best practices in producing statistical documents using Rmarkdown.
 
 One takeaway is to avoid the general pitfall of putting large amounts of data processing *inside* ones Rmarkdown reports, then minor changes to the report can require hours to compile. Large data processing and wrangling tasks should be done in scripts *outside* the report. The report should load the results of this process.
+
+Another great reference is Dr. Harrell's [analysis project workflow][rflow]. His content mirrors much of this workshop and will reinforce its material. It can also be used as a template for quarto as its source code is available (by clicking the "</> Code" link).
 
 ## Caching
 
@@ -1010,7 +1014,11 @@ Wickham's "Tidy Data" philosophy was concurrent with the development of a suite 
 
 [^1]: `mu` is a copy of the part of the `Hmisc` package object `markupSpecs` that is for html.  It includes a function `session` that renders the session environment (including package versions) in html.
 
+[quarto]: https://quarto.org/
+
 [reiderer]: https://t.co/ZBk1OrTXYp
+
+[rflow]: https://www.fharrell.com/post/rflow
 
 [datasets]: https://hbiostat.org/data/ "DataSets"
 
